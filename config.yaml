@@ -1,0 +1,47 @@
+bot:
+  interval: 2 # in seconds
+  url:
+    test: wss://test.deribit.com/ws/api/v2
+    prod: wss://www.deribit.com/ws/api/v2
+
+  env: 'prod'
+
+  auth:
+    test:
+      grant_type: 'client_credentials'
+      client_id: 'PLwAFl71'
+      client_secret: 'fyUfohnmLn9G0vlnPVOMsDFBIWTdsacl7hDF-pzRWl8'
+    prod:
+      grant_type: 'client_credentials'
+      client_id: 'XdxdL4lU'
+      client_secret: 'nuPcnvUaqpDIK0Q-_nYTpglTADn9Ffjn58FnPj6-OUM'
+
+  currency: 'BTC'
+
+# See settings from module logging
+# https://docs.python.org/3/library/logging.config.html
+logging:
+  version: 1
+  
+  formatters:
+    simple:
+      format: '%(asctime)s %(name)s [%(levelname)s]: %(message)s'
+    csv:
+      format: '%(asctime)s,%(message)s'
+      datefmt: '%Y-%m-%d %H:%M:%S'
+
+  handlers:
+    console:
+      class: 'logging.StreamHandler'
+      level: 'INFO'
+      formatter: 'simple'
+      stream: 'ext://sys.stdout'
+    file:
+      class: 'logging.FileHandler'
+      level: 'FILE'
+      formatter: 'csv'
+      filename: 'bot_log.csv'
+
+  root:
+    level: 'INFO'
+    handlers: [console,file]
