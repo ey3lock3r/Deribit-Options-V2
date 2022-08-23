@@ -3,4 +3,4 @@ __pycache__/
 .env
 .envrc
 .vscode/
-bot_log.log
+bot_log.csv
