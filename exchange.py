@@ -1,4 +1,5 @@
 # https://github.com/n-eliseev/deribitsimplebot/blob/master/deribitsimplebot/bot.py
+import asyncio
 import json
 import time
 import logging
@@ -20,22 +21,23 @@ class Deribit_Exchange:
                 logger: Union[logging.Logger, str, None] = None):
 
         self.currency = currency
-
         self.url = url[env]
-        self.order = {}
         self.__credentials = auth[env]
         self.logger = (logging.getLogger(logger) if isinstance(logger,str) else logger)
 
         if self.logger is None:
             self.logger = logging.getLogger(__name__)
 
+        self.df_initcols = ['strike', 'instrument_name', 'option_type']
+
+        self.init_vals()
+        self.logger.info(f'Bot init for {self.currency} options')
+
+    def init_vals(self):
+        self.order = {}
         self._keep_alive = True
         self._updated = False
         self._asset_price = 0
-
-        self.df_initcols = ['strike', 'instrument_name', 'option_type', 'settlement_period']
-
-        self.logger.info(f'Bot init for {self.currency} options')
 
     @property
     def keep_alive(self) -> bool :
@@ -234,6 +236,7 @@ class Deribit_Exchange:
             # self.logger.info(f'Instruments: \n{raw_instruments[0]}')
 
             if not raw_instruments:
+                self.logger.info('Raw Instruments empty!')
                 return (None, None)
 
             raw_instruments = pd.DataFrame(raw_instruments)
@@ -243,7 +246,17 @@ class Deribit_Exchange:
 
             pd_inst = pd.DataFrame(raw_instruments)[self.df_initcols].set_index('strike', drop=False)
             pd_inst['date'] = pd_inst['instrument_name'].str.split('-', expand=True)[1]
-            pd_inst = pd_inst[pd_inst['date'] == expire_dt]
+
+            while self.asset_price == 0:     # wait for price to be fetched
+                self.logger.info('Price not updated!')
+                await asyncio.sleep(0.5)
+            
+            styk_interval = 500
+            bounds = 5000
+            price = self.asset_price
+            price -= price % styk_interval
+
+            pd_inst = pd_inst[(pd_inst['date'] == expire_dt) & (pd_inst['strike'] >= price - bounds) & (pd_inst['strike'] <= price + bounds)]
             # pd_inst = pd_inst[(pd_inst['settlement_period'] != 'month') & (pd_inst['settlement_period'] != 'week')]
             pd_inst.sort_index(inplace=True)
 

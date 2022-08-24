@@ -51,6 +51,7 @@ class CBot:
         csv_label = ['Option', 'Strike', 'Price', 'Sell Premium']
         self.logger.log(FILE, ",".join(csv_label + ['Delta', 'Gamma', 'Vega', 'Rho']))
 
+        self.logger.info('In check risk free trade, before while!')
         while self.exchange.keep_alive:
             self.logger.info('Checking for risk free trade...')
 
@@ -83,6 +84,8 @@ class CBot:
 
         tasks = []
 
+        tasks.append(asyncio.to_thread(self.check_riskfree_trade))
+        tasks.append(asyncio.ensure_future(self.exchange.fetch_deribit_price_index()))
         self.call_options, self.put_options = await self.exchange.prepare_option_struct()
 
         if not self.call_options or not self.put_options:
@@ -90,9 +93,6 @@ class CBot:
 
         # def update_options_dict(options_dict, strike: str, new_data) -> NoReturn:
         #     options_dict[strike].update(new_data)
-
-        tasks.append(asyncio.to_thread(self.check_riskfree_trade))
-        tasks.append(asyncio.ensure_future(self.exchange.fetch_deribit_price_index()))
 
         for key, val in self.call_options.items():
             tasks.append(
@@ -113,7 +113,7 @@ class CBot:
         for task in tasks:
             # await asyncio.gather(task)
             await task
-            time.sleep(0.3)
+            time.sleep(0.5)
 
         self.logger.info(f'Taks created: {len(tasks)}')
 
@@ -147,9 +147,9 @@ class CBot:
             self.logger.info('Keyboard Interrupt detected...')
 
         except Exception as E:
-            self.exchange.keep_alive = False
             self.logger.info(f'Error in run: {E}')
             self.logger.info(traceback.print_exc())
+            self.exchange.keep_alive = False
 
         finally:
             self.exchange.keep_alive = False
