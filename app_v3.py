@@ -18,13 +18,15 @@ def main():
     logging.addLevelName(FILE,"FILE")
     logging.config.dictConfig(config['logging'])
 
-    deribit_exch = Deribit_Exchange(**config['exchange'])
     # arbitrage_strat = check_riskfree_trade_v2
     # arbitrage_strat = collar_strategy
     arbitrage_strat = selling_premiums
 
-    bot = CBot(**config['bot'], exchange=deribit_exch, arbitrage_strategy=arbitrage_strat, money_mngmt=None)
-    bot.run()
+    while True:
+        deribit_exch = Deribit_Exchange(**config['exchange'])
+        bot = CBot(**config['bot'], exchange=deribit_exch, arbitrage_strategy=arbitrage_strat, money_mngmt=None)
+        bot.run()
+
 
 if __name__ == '__main__':
     main()

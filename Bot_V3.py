@@ -85,6 +85,7 @@ class CBot:
         tasks = []
 
         tasks.append(asyncio.to_thread(self.check_riskfree_trade))
+        tasks.append(asyncio.ensure_future(self.end_of_day()))
         tasks.append(asyncio.ensure_future(self.exchange.fetch_deribit_price_index()))
         self.call_options, self.put_options = await self.exchange.prepare_option_struct()
 
@@ -115,7 +116,7 @@ class CBot:
             await task
             time.sleep(0.5)
 
-        self.logger.info(f'Taks created: {len(tasks)}')
+        self.logger.info(f'Tasks created: {len(tasks)}')
 
         # asyncio.gather(asyncio.to_thread(self.check_riskfree_trade))
 
@@ -135,6 +136,12 @@ class CBot:
         # # loop = asyncio.get_running_loop()
         # # await loop.run_in_executor(None, self.check_riskfree_trade)
         # # executor.submit(self.check_riskfree_trade)
+
+    async def end_of_day(self):
+        await asyncio.sleep( 86400 - time.time() % 86400 + 60 )
+        self.exchange.keep_alive = False
+        self.logger.info('End of day!')
+
             
     def run(self) -> NoReturn:
         """Wrapper for start to run without additional libraries for managing asynchronous"""
