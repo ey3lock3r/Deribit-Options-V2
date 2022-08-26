@@ -26,14 +26,8 @@ def main():
         deribit_exch = Deribit_Exchange(**config['exchange'])
         bot = CBot(**config['bot'], exchange=deribit_exch, arbitrage_strategy=arbitrage_strat, money_mngmt=None)
         
-        try:
-            bot.run()
-
-            if bot.error:
-                break
-
-        except KeyboardInterrupt:
-            bot.logger.info('Keyboard Interrupt detected...')
+        bot.run()
+        if bot.stop:
             break
 
 

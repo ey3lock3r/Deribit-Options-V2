@@ -31,7 +31,7 @@ class CBot:
         if self.logger is None:
             self.logger = logging.getLogger(__name__)
 
-        self.error = False
+        self.stop = False
 
         # self.df_initcols = ['strike', 'instrument_name', 'option_type', 'settlement_period']
 
@@ -154,12 +154,16 @@ class CBot:
 
         try:
             loop.run_until_complete(self.start())
+        
+        except KeyboardInterrupt:
+            self.stop = True
+            bot.logger.info('Keyboard Interrupt detected...')
 
         except Exception as E:
             self.logger.info(f'Error in run: {E}')
             self.logger.info(traceback.print_exc())
             self.exchange.keep_alive = False
-            self.error = True
+            self.stop = True
 
         finally:
             self.exchange.keep_alive = False
