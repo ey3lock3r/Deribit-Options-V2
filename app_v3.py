@@ -20,6 +20,7 @@ def main():
     arbitrage_strat = selling_premiums
 
     while True:
+        print('while started!')
         config['logging']['handlers']['file']['filename'] = date.today().strftime('%y-%m-%d') + '_bot_log.log'
         logging.config.dictConfig(config['logging'])
 
