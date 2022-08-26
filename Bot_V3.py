@@ -24,15 +24,11 @@ class CBot:
         self.money_mngmt = money_mngmt
         self.arbitrage_strategy = arbitrage_strategy
 
-        self.call_options = {}
-        self.put_options = {}
-
         self.logger = (logging.getLogger(logger) if isinstance(logger,str) else logger)
         if self.logger is None:
             self.logger = logging.getLogger(__name__)
 
-        self.stop = False
-
+        self.init_vals()
         self.logger.info('Bot initialized!')
 
         # self.df_initcols = ['strike', 'instrument_name', 'option_type', 'settlement_period']
@@ -40,6 +36,12 @@ class CBot:
     # def execute_trade(self):
     #     self.calculate_imargin()
     #     self.calculate_mmargin()
+
+    def init_vals(self):
+        self.call_options = {}
+        self.put_options = {}
+        self.stop = False
+        self.exchange.init_vals()
 
     def check_riskfree_trade(self):
 

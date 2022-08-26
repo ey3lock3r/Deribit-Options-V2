@@ -18,16 +18,16 @@ def main():
     # arbitrage_strat = check_riskfree_trade_v2
     # arbitrage_strat = collar_strategy
     arbitrage_strat = selling_premiums
-    bot = None
+    
+    deribit_exch = Deribit_Exchange(**config['exchange'])
+    bot = CBot(**config['bot'], exchange=deribit_exch, arbitrage_strategy=arbitrage_strat, money_mngmt=None)
 
     while True:
         print('while started!')
         config['logging']['handlers']['file']['filename'] = date.today().strftime('%y-%m-%d') + '_bot_log.log'
         logging.config.dictConfig(config['logging'])
 
-        deribit_exch = Deribit_Exchange(**config['exchange'])
-        bot = CBot(**config['bot'], exchange=deribit_exch, arbitrage_strategy=arbitrage_strat, money_mngmt=None)
-        
+        bot.init_vals()
         bot.run()
         print('Bot ended, starting new cycle!')
         if bot.stop:
