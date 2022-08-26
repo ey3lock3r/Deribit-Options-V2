@@ -33,6 +33,8 @@ class CBot:
 
         self.stop = False
 
+        self.logger.info('Bot initialized!')
+
         # self.df_initcols = ['strike', 'instrument_name', 'option_type', 'settlement_period']
 
     # def execute_trade(self):
