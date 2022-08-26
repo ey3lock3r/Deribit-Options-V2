@@ -27,7 +27,7 @@ class CBot:
         self.arbitrage_strategy = arbitrage_strategy
         self.logconf = logconf
 
-        self.logger = (logging.getLogger(logger) if isinstance(logger,str) else logger)
+        # self.logger = (logging.getLogger(logger) if isinstance(logger,str) else logger)
         if self.logger is None:
             self.logger = logging.getLogger(__name__)
 
