@@ -170,4 +170,5 @@ class CBot:
         finally:
             self.exchange.keep_alive = False
             loop.run_until_complete(self.exchange.grace_exit())
+            loop.close()
             self.logger.info('Gracefully exit')
