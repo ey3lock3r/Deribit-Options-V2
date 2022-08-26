@@ -53,7 +53,6 @@ class CBot:
         csv_label = ['Option', 'Strike', 'Price', 'Sell Premium']
         self.logger.log(FILE, ",".join(csv_label + ['Delta', 'Gamma', 'Vega', 'Rho']))
 
-        self.logger.info('In check risk free trade, before while!')
         while self.exchange.keep_alive:
             self.logger.info('Checking for risk free trade...')
 
@@ -76,6 +75,8 @@ class CBot:
             else:
                 self.logger.info('Prices not updated')
                 time.sleep(self.interval * 0.3)
+
+        self.logger.info('check_riskfree_trade ended!')
 
 
     async def start(self):
@@ -119,6 +120,7 @@ class CBot:
             time.sleep(0.5)
 
         self.logger.info(f'Tasks created: {len(tasks)}')
+        self.logger.info('start > end !')
 
         # asyncio.gather(asyncio.to_thread(self.check_riskfree_trade))
 
@@ -143,7 +145,7 @@ class CBot:
         # await asyncio.sleep( 86400 - time.time() % 86400 + 60 )
         await asyncio.sleep( 180 - time.time() % 180 )
         self.exchange.keep_alive = False
-        await asyncio.sleep( 60 )
+        await asyncio.sleep( 5 )
         self.logger.info('End of day!')
 
             
