@@ -40,7 +40,8 @@ def main():
 
         finally:
             bot.exchange.keep_alive = False
-            await bot.exchange.grace_exit()
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(bot.exchange.grace_exit())
             bot.logger.info('Gracefully exit')
 
 
