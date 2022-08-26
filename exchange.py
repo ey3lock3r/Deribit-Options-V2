@@ -260,6 +260,10 @@ class Deribit_Exchange:
             # pd_inst = pd_inst[(pd_inst['settlement_period'] != 'month') & (pd_inst['settlement_period'] != 'week')]
             pd_inst.sort_index(inplace=True)
 
+            if pd_inst.empty:
+                self.logger.info(f'No available options for day {expire_dt}')
+                return (None, None)
+
             pd_inst['bid'] = np.nan
             pd_inst['ask'] = np.nan
             pd_inst['delta'] = 0.0

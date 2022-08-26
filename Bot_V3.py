@@ -89,8 +89,8 @@ class CBot:
         tasks.append(asyncio.ensure_future(self.exchange.fetch_deribit_price_index()))
         self.call_options, self.put_options = await self.exchange.prepare_option_struct()
 
-        if not self.call_options or not self.put_options:
-            return
+        # if not self.call_options or not self.put_options:
+        #     return
 
         # def update_options_dict(options_dict, strike: str, new_data) -> NoReturn:
         #     options_dict[strike].update(new_data)
