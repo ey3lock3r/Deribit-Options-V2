@@ -23,10 +23,10 @@ class Deribit_Exchange:
         self.currency = currency
         self.url = url[env]
         self.__credentials = auth[env]
-        self.logger = (logging.getLogger(logger) if isinstance(logger,str) else logger)
+        # self.logger = (logging.getLogger(logger) if isinstance(logger,str) else logger)
 
-        if self.logger is None:
-            self.logger = logging.getLogger(__name__)
+        # if self.logger is None:
+        #     self.logger = logging.getLogger(__name__)
 
         self.df_initcols = ['strike', 'instrument_name', 'option_type']
 
@@ -34,6 +34,7 @@ class Deribit_Exchange:
         self.logger.info(f'Bot init for {self.currency} options')
 
     def init_vals(self):
+        self.logger = logging.getLogger(__name__)
         self.order = {}
         self._keep_alive = True
         self._updated = False
