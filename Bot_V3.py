@@ -159,7 +159,7 @@ class CBot:
         
         except KeyboardInterrupt:
             self.stop = True
-            bot.logger.info('Keyboard Interrupt detected...')
+            self.logger.info('Keyboard Interrupt detected...')
 
         except Exception as E:
             self.logger.info(f'Error in run: {E}')
