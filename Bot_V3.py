@@ -143,7 +143,7 @@ class CBot:
 
     async def end_of_day(self):
         # await asyncio.sleep( 86400 - time.time() % 86400 + 60 )
-        await asyncio.sleep( 180 - time.time() % 180 )
+        await asyncio.sleep( 120 - time.time() % 120 )
         self.exchange.keep_alive = False
         await asyncio.sleep( 5 )
         self.logger.info('End of day!')
