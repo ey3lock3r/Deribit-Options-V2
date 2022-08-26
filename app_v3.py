@@ -3,6 +3,7 @@ from exchange import Deribit_Exchange
 # from arbitrage_strategy import check_riskfree_trade, check_riskfree_trade_v2
 from risk_free_strategy import collar_strategy, selling_premiums
 
+import asyncio
 import yaml
 import logging.config
 import traceback
