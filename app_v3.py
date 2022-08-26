@@ -19,14 +19,14 @@ def main():
     config['logging']['handlers']['file']['filename'] = logfile
     logging.config.dictConfig(config['logging'])
 
-    logging.basicConfig(filename=logfile)
+    # logging.basicConfig(filename=logfile)
     
     # arbitrage_strat = check_riskfree_trade_v2
     # arbitrage_strat = collar_strategy
     arbitrage_strat = selling_premiums
     
     deribit_exch = Deribit_Exchange(**config['exchange'])
-    bot = CBot(**config['bot'], exchange=deribit_exch, arbitrage_strategy=arbitrage_strat, money_mngmt=None)
+    bot = CBot(**config['bot'], exchange=deribit_exch, arbitrage_strategy=arbitrage_strat, money_mngmt=None, logconf=config['logging'])
     bot.run()
 
     # while True:
