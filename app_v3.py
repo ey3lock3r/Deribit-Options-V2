@@ -3,10 +3,8 @@ from exchange import Deribit_Exchange
 # from arbitrage_strategy import check_riskfree_trade, check_riskfree_trade_v2
 from risk_free_strategy import collar_strategy, selling_premiums
 
-import asyncio
 import yaml
 import logging.config
-import traceback
 from datetime import date
 
 def main():
@@ -31,19 +29,12 @@ def main():
         try:
             bot.run()
 
+            if bot.error:
+                break
+
         except KeyboardInterrupt:
             bot.logger.info('Keyboard Interrupt detected...')
-
-        except Exception as E:
-            bot.logger.info(f'Error!: {E}')
-            bot.logger.info(traceback.print_exc())
-            bot.exchange.keep_alive = False
-
-        finally:
-            bot.exchange.keep_alive = False
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(bot.exchange.grace_exit())
-            bot.logger.info('Gracefully exit')
+            break
 
 
 if __name__ == '__main__':

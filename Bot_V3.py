@@ -31,6 +31,8 @@ class CBot:
         if self.logger is None:
             self.logger = logging.getLogger(__name__)
 
+        self.error = False
+
         # self.df_initcols = ['strike', 'instrument_name', 'option_type', 'settlement_period']
 
     # def execute_trade(self):
@@ -148,19 +150,20 @@ class CBot:
         """Wrapper for start to run without additional libraries for managing asynchronous"""
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.start())
-        # try:
-        #     loop.run_until_complete(self.start())
 
-        # except KeyboardInterrupt:
-        #     self.logger.info('Keyboard Interrupt detected...')
+        try:
+            loop.run_until_complete(self.start())
 
-        # except Exception as E:
-        #     self.logger.info(f'Error in run: {E}')
-        #     self.logger.info(traceback.print_exc())
-        #     self.exchange.keep_alive = False
+        except KeyboardInterrupt:
+            self.logger.info('Keyboard Interrupt detected...')
 
-        # finally:
-        #     self.exchange.keep_alive = False
-        #     loop.run_until_complete(self.exchange.grace_exit())
-        #     self.logger.info('Gracefully exit')
+        except Exception as E:
+            self.logger.info(f'Error in run: {E}')
+            self.logger.info(traceback.print_exc())
+            self.exchange.keep_alive = False
+            self.error = True
+
+        finally:
+            self.exchange.keep_alive = False
+            loop.run_until_complete(self.exchange.grace_exit())
+            self.logger.info('Gracefully exit')
