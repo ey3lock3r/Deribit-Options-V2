@@ -169,7 +169,7 @@ class Deribit_Exchange:
 
                     self.logger.debug(f'Price index: {data}')
 
-        self.logger.info(f'fetch_orderbook_data: Listener for {instrument} ended..')
+        self.logger.info('fetch_deribit_price_index listener ended..')
 
     async def fetch_orderbook_data(self, strike: str, instrument: str, options_dict: dict) -> NoReturn:
         """Реализует логику работы бота"""
