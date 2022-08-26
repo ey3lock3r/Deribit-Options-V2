@@ -32,7 +32,6 @@ class CBot:
 
         self.init_vals()
         
-        self.logger = logging.getLogger(__name__)
         self.logger.info('Bot initialized!')
 
         # self.df_initcols = ['strike', 'instrument_name', 'option_type', 'settlement_period']
@@ -49,6 +48,7 @@ class CBot:
         logfile = date.today().strftime('%y-%m-%d_%H_%M') + '_bot_log.csv'
         self.logconf['handlers']['file']['filename'] = logfile
         logging.config.dictConfig(self.logconf)
+        self.logger = logging.getLogger(__name__)
 
         self.exchange.init_vals()
 
