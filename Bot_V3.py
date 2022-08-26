@@ -138,7 +138,8 @@ class CBot:
         # # executor.submit(self.check_riskfree_trade)
 
     async def end_of_day(self):
-        await asyncio.sleep( 86400 - time.time() % 86400 + 60 )
+        # await asyncio.sleep( 86400 - time.time() % 86400 + 60 )
+        await asyncio.sleep( 60 - time.time() % 60 + 60 )
         self.exchange.keep_alive = False
         self.logger.info('End of day!')
 
