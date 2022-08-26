@@ -141,8 +141,9 @@ class CBot:
 
     async def end_of_day(self):
         # await asyncio.sleep( 86400 - time.time() % 86400 + 60 )
-        await asyncio.sleep( 600 - time.time() % 600 + 60 )
+        await asyncio.sleep( 180 - time.time() % 180 )
         self.exchange.keep_alive = False
+        await asyncio.sleep( 60 )
         self.logger.info('End of day!')
 
             
@@ -153,9 +154,6 @@ class CBot:
 
         try:
             loop.run_until_complete(self.start())
-
-        except KeyboardInterrupt:
-            self.logger.info('Keyboard Interrupt detected...')
 
         except Exception as E:
             self.logger.info(f'Error in run: {E}')
