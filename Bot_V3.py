@@ -5,7 +5,7 @@ import asyncio
 import concurrent.futures
 import logging
 import pandas as pd
-# import traceback
+import traceback
 
 from typing import Union, Optional, NoReturn
 
@@ -83,7 +83,7 @@ class CBot:
         """Starts the bot with the parameters for synchronization.
         Synchronization will be carried out only if the store (store) is specified """
 
-        self.logger.info('Bot start')
+        self.logger.info('start running')
 
         tasks = []
 
@@ -152,6 +152,7 @@ class CBot:
     def run(self) -> NoReturn:
         """Wrapper for start to run without additional libraries for managing asynchronous"""
 
+        self.logger.info('Run started')
         loop = asyncio.get_event_loop()
 
         try:
@@ -170,5 +171,5 @@ class CBot:
         finally:
             self.exchange.keep_alive = False
             loop.run_until_complete(self.exchange.grace_exit())
-            loop.close()
+            # loop.close()
             self.logger.info('Gracefully exit')
