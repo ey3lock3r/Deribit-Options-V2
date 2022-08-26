@@ -28,10 +28,11 @@ class CBot:
         self.logconf = logconf
 
         # self.logger = (logging.getLogger(logger) if isinstance(logger,str) else logger)
-        if self.logger is None:
-            self.logger = logging.getLogger(__name__)
+        # if self.logger is None:
 
         self.init_vals()
+        
+        self.logger = logging.getLogger(__name__)
         self.logger.info('Bot initialized!')
 
         # self.df_initcols = ['strike', 'instrument_name', 'option_type', 'settlement_period']

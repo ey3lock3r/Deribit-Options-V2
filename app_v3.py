@@ -13,10 +13,10 @@ def main():
     with open('./config_v3.yaml','r') as f:
         config = yaml.load(f.read(), Loader = yaml.FullLoader)
 
-    logfile = date.today().strftime('%y-%m-%d') + '_bot_log.csv'
+    # logfile = date.today().strftime('%y-%m-%d') + '_bot_log.csv'
 
     logging.addLevelName(FILE,"FILE")
-    config['logging']['handlers']['file']['filename'] = logfile
+    # config['logging']['handlers']['file']['filename'] = logfile
     logging.config.dictConfig(config['logging'])
 
     # logging.basicConfig(filename=logfile)
