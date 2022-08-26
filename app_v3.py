@@ -18,6 +18,7 @@ def main():
     # arbitrage_strat = check_riskfree_trade_v2
     # arbitrage_strat = collar_strategy
     arbitrage_strat = selling_premiums
+    bot = None
 
     while True:
         print('while started!')
