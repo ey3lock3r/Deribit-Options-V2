@@ -14,6 +14,8 @@ def main():
         config = yaml.load(f.read(), Loader = yaml.FullLoader)
 
     logging.addLevelName(FILE,"FILE")
+    config['logging']['handlers']['file']['filename'] = date.today().strftime('%y-%m-%d') + '_bot_log.log'
+    logging.config.dictConfig(config['logging'])
     
     # arbitrage_strat = check_riskfree_trade_v2
     # arbitrage_strat = collar_strategy
