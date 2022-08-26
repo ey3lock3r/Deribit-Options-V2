@@ -41,7 +41,11 @@ class CBot:
         self.call_options = {}
         self.put_options = {}
         self.stop = False
+        logfile = date.today().strftime('%y-%m-%d_%H_%M') + '_bot_log.csv'
+        logging.basicConfig(filename=logfile)
+
         self.exchange.init_vals()
+
 
     def check_riskfree_trade(self):
 
