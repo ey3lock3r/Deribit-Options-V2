@@ -159,21 +159,25 @@ class CBot:
         self.logger.info('Run started')
         loop = asyncio.get_event_loop()
 
-        try:
-            loop.run_until_complete(self.start())
-        
-        except KeyboardInterrupt:
-            self.stop = True
-            self.logger.info('Keyboard Interrupt detected...')
+        while True:
+            try:
+                loop.run_until_complete(self.start())
+            
+            except KeyboardInterrupt:
+                self.stop = True
+                self.logger.info('Keyboard Interrupt detected...')
+                break
 
-        except Exception as E:
-            self.logger.info(f'Error in run: {E}')
-            self.logger.info(traceback.print_exc())
-            self.exchange.keep_alive = False
-            self.stop = True
+            except Exception as E:
+                self.logger.info(f'Error in run: {E}')
+                self.logger.info(traceback.print_exc())
+                self.exchange.keep_alive = False
+                self.stop = True
+                break
 
-        finally:
-            self.exchange.keep_alive = False
-            loop.run_until_complete(self.exchange.grace_exit())
-            # loop.close()
-            self.logger.info('Gracefully exit')
+            finally:
+                self.exchange.keep_alive = False
+                loop.run_until_complete(self.exchange.grace_exit())
+                self.logger.info('Gracefully exit')
+
+                self.init_vals()

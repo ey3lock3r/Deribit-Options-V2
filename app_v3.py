@@ -23,17 +23,18 @@ def main():
     
     deribit_exch = Deribit_Exchange(**config['exchange'])
     bot = CBot(**config['bot'], exchange=deribit_exch, arbitrage_strategy=arbitrage_strat, money_mngmt=None)
+    bot.run()
 
-    while True:
-        print('while started!')
-        config['logging']['handlers']['file']['filename'] = date.today().strftime('%y-%m-%d') + '_bot_log.log'
-        logging.config.dictConfig(config['logging'])
+    # while True:
+    #     print('while started!')
+    #     config['logging']['handlers']['file']['filename'] = date.today().strftime('%y-%m-%d') + '_bot_log.log'
+    #     logging.config.dictConfig(config['logging'])
 
-        bot.init_vals()
-        bot.run()
-        print('Bot ended, starting new cycle!')
-        if bot.stop:
-            break
+    #     bot.init_vals()
+    #     bot.run()
+    #     print('Bot ended, starting new cycle!')
+    #     if bot.stop:
+    #         break
 
 
 if __name__ == '__main__':
