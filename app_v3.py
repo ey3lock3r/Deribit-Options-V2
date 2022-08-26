@@ -27,6 +27,7 @@ def main():
         bot = CBot(**config['bot'], exchange=deribit_exch, arbitrage_strategy=arbitrage_strat, money_mngmt=None)
         
         bot.run()
+        print('Bot ended, starting new cycle!')
         if bot.stop:
             break
 
