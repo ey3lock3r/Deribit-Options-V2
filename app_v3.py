@@ -5,6 +5,7 @@ from risk_free_strategy import collar_strategy, selling_premiums
 
 import yaml
 import logging.config
+import traceback
 from datetime import date
 
 def main():
@@ -25,7 +26,22 @@ def main():
 
         deribit_exch = Deribit_Exchange(**config['exchange'])
         bot = CBot(**config['bot'], exchange=deribit_exch, arbitrage_strategy=arbitrage_strat, money_mngmt=None)
-        bot.run()
+        
+        try:
+            bot.run()
+
+        except KeyboardInterrupt:
+            bot.logger.info('Keyboard Interrupt detected...')
+
+        except Exception as E:
+            bot.logger.info(f'Error!: {E}')
+            bot.logger.info(traceback.print_exc())
+            bot.exchange.keep_alive = False
+
+        finally:
+            bot.exchange.keep_alive = False
+            await bot.exchange.grace_exit()
+            bot.logger.info('Gracefully exit')
 
 
 if __name__ == '__main__':

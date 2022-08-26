@@ -5,7 +5,7 @@ import asyncio
 import concurrent.futures
 import logging
 import pandas as pd
-import traceback
+# import traceback
 
 from typing import Union, Optional, NoReturn
 
@@ -148,18 +148,19 @@ class CBot:
         """Wrapper for start to run without additional libraries for managing asynchronous"""
 
         loop = asyncio.get_event_loop()
-        try:
-            loop.run_until_complete(self.start())
+        loop.run_until_complete(self.start())
+        # try:
+        #     loop.run_until_complete(self.start())
 
-        except KeyboardInterrupt:
-            self.logger.info('Keyboard Interrupt detected...')
+        # except KeyboardInterrupt:
+        #     self.logger.info('Keyboard Interrupt detected...')
 
-        except Exception as E:
-            self.logger.info(f'Error in run: {E}')
-            self.logger.info(traceback.print_exc())
-            self.exchange.keep_alive = False
+        # except Exception as E:
+        #     self.logger.info(f'Error in run: {E}')
+        #     self.logger.info(traceback.print_exc())
+        #     self.exchange.keep_alive = False
 
-        finally:
-            self.exchange.keep_alive = False
-            loop.run_until_complete(self.exchange.grace_exit())
-            self.logger.info('Gracefully exit')
+        # finally:
+        #     self.exchange.keep_alive = False
+        #     loop.run_until_complete(self.exchange.grace_exit())
+        #     self.logger.info('Gracefully exit')
