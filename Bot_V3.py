@@ -7,6 +7,7 @@ import logging
 import pandas as pd
 import traceback
 
+from datetime import date
 from typing import Union, Optional, NoReturn
 
 FILE = 60
