@@ -45,7 +45,7 @@ logging:
       filename: 'bot_log.csv'
       when: 'M'
       interval: 1
-      suffix: '%y-%m-%d_%H_%M_bot_log.csv'
+      # suffix: '%y-%m-%d_%H_%M_bot_log.csv'
 
   root:
     level: 'INFO'
