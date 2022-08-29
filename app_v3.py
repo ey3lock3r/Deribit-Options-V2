@@ -19,7 +19,7 @@ def main():
     # config['logging']['handlers']['file']['filename'] = logfile
     logging.config.dictConfig(config['logging'])
     logger = logging.getLogger(__name__)
-    for logr in logger:
+    for logr in logger.handlers:
         if isinstance(logr, logging.handlers.TimedRotatingFileHandler):
             logr.suffix = '%y-%m-%d_%H_%M_bot_log.csv'
     
