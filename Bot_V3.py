@@ -156,13 +156,12 @@ class CBot:
         # # executor.submit(self.check_riskfree_trade)
 
     async def end_of_day(self):
-        # await asyncio.sleep( 86400 - time.time() % 86400 + 60 )
-        await asyncio.sleep( 120 - time.time() % 120 )
+        await asyncio.sleep( 86400 - time.time() % 86400 + 36000)   # 24hrs + 10hrs, 10am
+        # await asyncio.sleep( 120 - time.time() % 120 )
         self.exchange.keep_alive = False
-        await asyncio.sleep( 5 )
         self.logger.info('End of day!')
-
-            
+        await asyncio.sleep( 600 )  # sleep/wait for 10 minutes before starting
+        
     def run(self) -> NoReturn:
         """Wrapper for start to run without additional libraries for managing asynchronous"""
 

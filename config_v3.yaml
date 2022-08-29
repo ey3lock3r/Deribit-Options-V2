@@ -43,8 +43,8 @@ logging:
       level: 'FILE'
       formatter: 'csv'
       filename: 'bot_log'
-      when: 'M'
-      interval: 2
+      when: 'midnight'
+      # interval: 2
       # suffix: '%y-%m-%d_%H_%M_bot_log.csv'
 
   root:
