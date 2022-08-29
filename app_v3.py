@@ -18,6 +18,7 @@ def main():
     logging.addLevelName(FILE,"FILE")
     # config['logging']['handlers']['file']['filename'] = logfile
     logging.config.dictConfig(config['logging'])
+    
 
     # logging.basicConfig(filename=logfile)
     

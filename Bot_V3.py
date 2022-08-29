@@ -28,6 +28,7 @@ class CBot:
         self.logger = (logging.getLogger(logger) if isinstance(logger,str) else logger)
         if self.logger is None:
             self.logger = logging.getLogger(__name__)
+            self.logger.suffix = '%y-%m-%d_%H_%M_bot_log.csv'
 
         self.init_vals()
         
