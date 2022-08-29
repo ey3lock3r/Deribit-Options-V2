@@ -223,7 +223,7 @@ class Deribit_Exchange:
 
     async def prepare_option_struct(self) -> NoReturn:
         self.logger.info('prepare_option_struct')
-        DAY = timedelta(2)
+        DAY = timedelta(1)
         expire_dt = date.today() + DAY
         self.logger.info(f'Today is {expire_dt}')
         expire_dt = expire_dt.strftime(f"{expire_dt.day}%b%y").upper()
