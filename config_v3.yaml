@@ -39,10 +39,12 @@ logging:
       formatter: 'simple'
       stream: 'ext://sys.stdout'
     file:
-      class: 'logging.FileHandler'
+      class: 'logging.TimedRotatingFileHandler'
       level: 'FILE'
       formatter: 'csv'
       filename: 'bot_log.csv'
+      when: 'M'
+      interval: 1
 
   root:
     level: 'INFO'

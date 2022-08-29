@@ -27,8 +27,9 @@ class CBot:
         self.arbitrage_strategy = arbitrage_strategy
         self.logconf = logconf
 
-        # self.logger = (logging.getLogger(logger) if isinstance(logger,str) else logger)
-        # if self.logger is None:
+        self.logger = (logging.getLogger(logger) if isinstance(logger,str) else logger)
+        if self.logger is None:
+            self.logger = logging.getLogger(__name__)
 
         self.init_vals()
         
@@ -45,10 +46,11 @@ class CBot:
         self.put_options = {}
         self.stop = False
 
-        logfile = date.today().strftime('%y-%m-%d_%H_%M') + '_bot_log.csv'
-        self.logconf['handlers']['file']['filename'] = logfile
-        logging.config.dictConfig(self.logconf)
-        self.logger = logging.getLogger(__name__)
+        # if not first run, rename logfile
+        # logfile = date.today().strftime('%y-%m-%d_%H_%M') + '_bot_log.csv'
+        # self.logconf['handlers']['file']['filename'] = logfile
+        # logging.config.dictConfig(self.logconf)
+        # self.logger = logging.getLogger(__name__)
 
         self.exchange.init_vals()
 
