@@ -26,7 +26,7 @@ def main():
     arbitrage_strat = selling_premiums
     
     deribit_exch = Deribit_Exchange(**config['exchange'])
-    bot = CBot(**config['bot'], exchange=deribit_exch, arbitrage_strategy=arbitrage_strat, money_mngmt=None, logconf=config['logging'])
+    bot = CBot(**config['bot'], exchange=deribit_exch, arbitrage_strategy=arbitrage_strat, money_mngmt=None)
     bot.run()
 
     # while True:

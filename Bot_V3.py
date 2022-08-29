@@ -18,14 +18,12 @@ class CBot:
     The business logic of the bot itself is described in the worker method."""
 
     def __init__(self, exchange, money_mngmt, arbitrage_strategy, interval: int = 2, 
-        logconf: dict = None):
-        # logger: Union[logging.Logger, str, None] = None):
+        logger: Union[logging.Logger, str, None] = None):
 
         self.interval = interval
         self.exchange = exchange
         self.money_mngmt = money_mngmt
         self.arbitrage_strategy = arbitrage_strategy
-        self.logconf = logconf
 
         self.logger = (logging.getLogger(logger) if isinstance(logger,str) else logger)
         if self.logger is None:
