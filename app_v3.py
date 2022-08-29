@@ -18,6 +18,10 @@ def main():
     logging.addLevelName(FILE,"FILE")
     # config['logging']['handlers']['file']['filename'] = logfile
     logging.config.dictConfig(config['logging'])
+    logger = logging.getLogger(__name__)
+    for logr in logger:
+        if isinstance(logr, logging.handlers.TimedRotatingFileHandler):
+            logr.suffix = '%y-%m-%d_%H_%M_bot_log.csv'
     
 
     # logging.basicConfig(filename=logfile)
@@ -26,8 +30,8 @@ def main():
     # arbitrage_strat = collar_strategy
     arbitrage_strat = selling_premiums
     
-    deribit_exch = Deribit_Exchange(**config['exchange'])
-    bot = CBot(**config['bot'], exchange=deribit_exch, arbitrage_strategy=arbitrage_strat, money_mngmt=None)
+    deribit_exch = Deribit_Exchange(**config['exchange'], logger=logger)
+    bot = CBot(**config['bot'], exchange=deribit_exch, arbitrage_strategy=arbitrage_strat, money_mngmt=None, logger=logger)
     bot.run()
 
     # while True:

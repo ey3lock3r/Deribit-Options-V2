@@ -27,7 +27,6 @@ class Deribit_Exchange:
 
         if self.logger is None:
             self.logger = logging.getLogger(__name__)
-            self.logger.suffix = '%y-%m-%d_%H_%M_bot_log.csv'
 
         self.df_initcols = ['strike', 'instrument_name', 'option_type']
 
