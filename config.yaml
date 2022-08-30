@@ -40,7 +40,10 @@ logging:
       class: 'logging.FileHandler'
       level: 'FILE'
       formatter: 'csv'
-      filename: 'bot_log.csv'
+      filename: 'bot_log'
+      when: 'midnight'
+      # interval: 2
+      # suffix: '%y-%m-%d_%H_%M_bot_log.csv'
 
   root:
     level: 'INFO'
