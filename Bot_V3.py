@@ -64,7 +64,7 @@ class CBot:
         # self.logger.log(FILE, ",".join(csv_label + ['Premium Payout', 'Max Profit', 'Max Loss', 'Risk Reward', 'Kelly']))
 
         # Set CSV Header
-        csv_label = ['Option', 'Strike', 'Price', 'Sell Premium']
+        csv_label = ['Option', 'instrument_name', 'Strike', 'Price', 'Sell Premium']
         self.logger.log(FILE, ",".join(csv_label + ['Delta', 'Gamma', 'Vega', 'Rho']))
 
         while self.exchange.keep_alive:

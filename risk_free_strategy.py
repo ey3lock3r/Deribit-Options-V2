@@ -29,7 +29,7 @@ def selling_premiums(put_options, call_options, price):
     df_call = df_call.iloc[df_call['delta'].values.argmax()]
 
     data = [
-        ['Put', df_put['strike'], price, df_put['bid'], df_put['delta'], df_put['gamma'], df_put['vega'], df_put['rho']],
+        ['Put', df_put['instrument_name'], df_put['strike'], price, df_put['bid'], df_put['delta'], df_put['gamma'], df_put['vega'], df_put['rho']],
         ['Call', df_call['strike'], price, df_call['bid'], df_call['delta'], df_call['gamma'], df_call['vega'], df_call['rho']],
     ]
     data = pd.DataFrame(data)
