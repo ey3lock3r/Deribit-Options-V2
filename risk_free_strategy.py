@@ -28,12 +28,11 @@ def selling_premiums(put_options, call_options, price):
 
     df_call = df_call.iloc[df_call['delta'].values.argmax()]
 
-    data = [
-        ['Put', df_put['instrument_name'], df_put['strike'], price, df_put['bid'], df_put['delta'], df_put['gamma'], df_put['vega'], df_put['rho']],
-        ['Call', df_call['instrument_name'], df_call['strike'], price, df_call['bid'], df_call['delta'], df_call['gamma'], df_call['vega'], df_call['rho']],
-    ]
-    data = pd.DataFrame(data)
-    return data
+    p_data = [price, df_put['instrument_name'], df_put['strike'], df_put['bid'], df_put['delta'], df_put['gamma'], df_put['vega'], df_put['rho']]
+    c_data = [df_call['instrument_name'], df_call['strike'], df_call['bid'], df_call['delta'], df_call['gamma'], df_call['vega'], df_call['rho']]
+
+    # data = pd.DataFrame(data)
+    return p_data + c_data
 
 def collar_strategy(put_options, call_options, price):
     styk_interval = 500

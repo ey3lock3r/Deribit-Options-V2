@@ -64,8 +64,10 @@ class CBot:
         # self.logger.log(FILE, ",".join(csv_label + ['Premium Payout', 'Max Profit', 'Max Loss', 'Risk Reward', 'Kelly']))
 
         # Set CSV Header
-        csv_label = ['Option', 'instrument_name', 'Strike', 'Price', 'Sell Premium']
-        self.logger.log(FILE, ",".join(csv_label + ['Delta', 'Gamma', 'Vega', 'Rho']))
+        csv_label = ['Price', 'instrument_name']
+        put_label = ['P_Strike', 'P_Premium', 'P_Delta', 'P_Gamma', 'P_Vega', 'P_Rho']
+        call_label = ['C_Strike', 'C_Premium', 'C_Delta', 'C_Gamma', 'C_Vega', 'C_Rho']
+        self.logger.log(FILE, ",".join(csv_label + put_label + call_label))
 
         while self.exchange.keep_alive:
             self.logger.info('Checking for risk free trade...')
@@ -75,10 +77,10 @@ class CBot:
 
                 df_arbi = self.arbitrage_strategy(self.put_options, self.call_options, price)
 
-                if not df_arbi.empty:
+                if df_arbi:
                     self.logger.info(f'Price index: {price}')
-                    self.logger.log(FILE, ",".join(df_arbi.iloc[0].values.astype(str)))
-                    self.logger.log(FILE, ",".join(df_arbi.iloc[1].values.astype(str)))
+                    self.logger.log(FILE, ",".join(df_arbi))
+                    # self.logger.log(FILE, ",".join(df_arbi.iloc[1].values.astype(str)))
 
                     # min = df_arbi['Cost'].values.argmin()
                     # self.logger.log(FILE, ",".join(df_arbi.iloc[min].values.astype(str)))
