@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 put_label = ['bid_p', 'ask_p']
 call_label = ['bid_c', 'ask_c']
@@ -14,7 +15,7 @@ def selling_premiums(put_options, call_options, price):
     df_put = df_put[(df_put['delta'] <= -0.1) & (df_put['delta'] >= -0.2)]
     if df_put.empty:
         print('empty put')
-        return []
+        return np.array([])
 
     df_put = df_put.iloc[df_put['delta'].values.argmax()]
 
@@ -24,7 +25,7 @@ def selling_premiums(put_options, call_options, price):
     df_call = df_call[(df_call['delta'] >= 0.1) & (df_call['delta'] <= 0.2)]
     if df_call.empty:
         print('empty call')
-        return []
+        return np.array([])
 
     df_call = df_call.iloc[df_call['delta'].values.argmax()]
 
@@ -32,7 +33,7 @@ def selling_premiums(put_options, call_options, price):
     c_data = [df_call['instrument_name'], df_call['strike'], df_call['bid'], df_call['delta'], df_call['gamma'], df_call['vega'], df_call['rho']]
 
     # data = pd.DataFrame(data)
-    return p_data + c_data
+    return np.array(p_data + c_data, dtype=str)
 
 def collar_strategy(put_options, call_options, price):
     styk_interval = 500

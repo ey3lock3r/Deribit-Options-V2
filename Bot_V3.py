@@ -77,7 +77,7 @@ class CBot:
 
                 df_arbi = self.arbitrage_strategy(self.put_options, self.call_options, price)
 
-                if df_arbi:
+                if df_arbi.size:
                     self.logger.info(f'Price index: {price}')
                     self.logger.log(FILE, ",".join(df_arbi))
                     # self.logger.log(FILE, ",".join(df_arbi.iloc[1].values.astype(str)))
