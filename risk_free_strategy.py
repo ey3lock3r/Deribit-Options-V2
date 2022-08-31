@@ -21,7 +21,7 @@ def selling_premiums(put_options, call_options, price):
     # call options 
     df_call = pd.DataFrame(call_options.values())
     df_call.set_index('strike', inplace=True, drop=False)
-    df_call = df_call[(df_call['delta'] > 0.09) & (df_call['delta'] <= 0.2)]
+    df_call = df_call[(df_call['delta'] >= 0.1) & (df_call['delta'] <= 0.2)]
     if df_call.empty:
         print('empty call')
         return df_call
