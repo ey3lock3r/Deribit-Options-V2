@@ -181,7 +181,7 @@ class CBot:
                 self.logger.info(f'Error in run: {E}')
                 self.logger.info(traceback.print_exc())
                 self.exchange.keep_alive = False
-                self.stop = True
+                # self.stop = True
 
             finally:
                 self.exchange.keep_alive = False
