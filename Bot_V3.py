@@ -187,6 +187,7 @@ class CBot:
                 self.exchange.keep_alive = False
                 loop.run_until_complete(self.exchange.grace_exit())
                 self.logger.info('Gracefully exit')
+                time.sleep(2)
 
                 if self.stop:
                     break
