@@ -78,11 +78,13 @@ class CBot:
 
                 if df_arbi.size:
                     self.logger.info(f'Price index: {price}')
-                    self.logger.log(FILE, ",".join(df_arbi))
-                    # self.logger.log(FILE, ",".join(df_arbi.iloc[1].values.astype(str)))
+                    
+                    for d in df_arbi:
+                        self.logger.log(FILE, ",".join(d))
+                        # self.logger.log(FILE, ",".join(df_arbi.iloc[1].values.astype(str)))
 
-                    # min = df_arbi['Cost'].values.argmin()
-                    # self.logger.log(FILE, ",".join(df_arbi.iloc[min].values.astype(str)))
+                        # min = df_arbi['Cost'].values.argmin()
+                        # self.logger.log(FILE, ",".join(df_arbi.iloc[min].values.astype(str)))
 
                 self.exchange.updated = False
                 time.sleep(self.interval)

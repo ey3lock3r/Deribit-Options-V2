@@ -9,6 +9,39 @@ df_initcols = ['strike', 'instrument_name', 'option_type', 'settlement_period']
 # def filter_option()
 
 def selling_premiums(put_options, call_options, price):
+    data = []
+
+    # 1500 distance
+    l_price = price % 500
+    h_price = l_price + 500
+    l_strike = 0
+    h_strike = 0
+
+    if price > l_price + 250:
+        l_strike = h_price - 1000
+        h_strike = h_price + 1000
+
+    else:
+        l_strike = float(l_price - 1000)
+        h_strike = float(l_price + 1000)
+
+    p_data = [price, put_options[l_strike]['instrument_name'], 
+        put_options[l_strike]['strike'], 
+        put_options[l_strike]['bid'], 
+        put_options[l_strike]['delta'], 
+        put_options[l_strike]['gamma'], 
+        put_options[l_strike]['vega'], 
+        put_options[l_strike]['rho']]
+    c_data = [call_options['instrument_name'], 
+        call_options[h_strike]['strike'], 
+        call_options[h_strike]['bid'], 
+        call_options[h_strike]['delta'], 
+        call_options[h_strike]['gamma'], 
+        call_options[h_strike]['vega'], 
+        call_options[h_strike]['rho']]
+
+    data.append(p_data + c_data + ['1.5k Dist Strategy'])
+
     # put options 
     df_put = pd.DataFrame(put_options.values())
     df_put.set_index('strike', inplace=True, drop=False)
@@ -33,7 +66,9 @@ def selling_premiums(put_options, call_options, price):
     c_data = [df_call['instrument_name'], df_call['strike'], df_call['bid'], df_call['delta'], df_call['gamma'], df_call['vega'], df_call['rho']]
 
     # data = pd.DataFrame(data)
-    return np.array(p_data + c_data, dtype=str)
+    data.append(p_data + c_data + ['10-20% Delta Strategy'])
+
+    return np.array(data, dtype=str)
 
 def collar_strategy(put_options, call_options, price):
     styk_interval = 500
