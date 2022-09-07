@@ -48,7 +48,7 @@ def selling_premiums(put_options, call_options, price):
     df_put = df_put[(df_put['delta'] <= -0.1) & (df_put['delta'] >= -0.2)]
     if df_put.empty:
         print('empty put')
-        return np.array([])
+        return np.array(data, dtype=str)
 
     df_put = df_put.iloc[df_put['delta'].values.argmax()]
 
@@ -58,7 +58,7 @@ def selling_premiums(put_options, call_options, price):
     df_call = df_call[(df_call['delta'] >= 0.1) & (df_call['delta'] <= 0.2)]
     if df_call.empty:
         print('empty call')
-        return np.array([])
+        return np.array(data, dtype=str)
 
     df_call = df_call.iloc[df_call['delta'].values.argmax()]
 
