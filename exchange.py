@@ -97,8 +97,8 @@ class Deribit_Exchange:
 
         if 'error' in obj and raise_error:
             self.logger.debug('Error found!')
-            self.logger.debug(f'Error: code: {obj['error']['code']}')
-            self.logger.debug(f'Error: msg: {obj['error']['message']}')
+            self.logger.debug(f'Error: code: {obj["error"]["code"]}')
+            self.logger.debug(f'Error: msg: {obj["error"]["message"]}')
             raise CBotResponseError(obj['error']['message'],obj['error']['code'])
 
         return None
