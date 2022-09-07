@@ -96,6 +96,9 @@ class Deribit_Exchange:
             return obj[result_prop]
 
         if 'error' in obj and raise_error:
+            self.logger.debug('Error found!')
+            self.logger.debug(f'Error: code: {obj['error']['code']}')
+            self.logger.debug(f'Error: msg: {obj['error']['message']}')
             raise CBotResponseError(obj['error']['message'],obj['error']['code'])
 
         return None
@@ -169,6 +172,8 @@ class Deribit_Exchange:
                     self.updated = True
 
                     self.logger.debug(f'Price index: {data}')
+                
+                elif 'error'
 
         self.logger.info('fetch_deribit_price_index listener ended..')
 
