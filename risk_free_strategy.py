@@ -12,7 +12,7 @@ def selling_premiums(put_options, call_options, price):
     data = []
 
     # 1500 distance
-    l_price = price % 500
+    l_price = price - price % 500
     h_price = l_price + 500
     l_strike = 0
     h_strike = 0
