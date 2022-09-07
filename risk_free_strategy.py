@@ -32,7 +32,7 @@ def selling_premiums(put_options, call_options, price):
         put_options[l_strike]['gamma'], 
         put_options[l_strike]['vega'], 
         put_options[l_strike]['rho']]
-    c_data = [call_options['instrument_name'], 
+    c_data = [call_options[h_strike]['instrument_name'], 
         call_options[h_strike]['strike'], 
         call_options[h_strike]['bid'], 
         call_options[h_strike]['delta'], 
