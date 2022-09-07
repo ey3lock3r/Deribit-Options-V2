@@ -172,8 +172,6 @@ class Deribit_Exchange:
                     self.updated = True
 
                     self.logger.debug(f'Price index: {data}')
-                
-                elif 'error'
 
         self.logger.info('fetch_deribit_price_index listener ended..')
 
