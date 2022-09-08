@@ -176,20 +176,21 @@ class CBot:
                 loop.run_until_complete(self.start())
             
             except KeyboardInterrupt:
+                self.exchange.keep_alive = False
                 self.stop = True
                 self.logger.info('Keyboard Interrupt detected...')
 
             except Exception as E:
                 self.logger.info(f'Error in run: {E}')
                 self.logger.info(traceback.print_exc())
-                self.exchange.keep_alive = False
+                # self.exchange.keep_alive = False
                 # self.stop = True
 
             finally:
-                self.exchange.keep_alive = False
+                time.sleep(1)
                 loop.run_until_complete(self.exchange.grace_exit())
                 self.logger.info('Gracefully exit')
-                time.sleep(2)
+                time.sleep(1)
 
                 if self.stop:
                     break

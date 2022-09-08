@@ -25,6 +25,11 @@ def selling_premiums(put_options, call_options, price):
         l_strike = float(l_price - 1000)
         h_strike = float(l_price + 1000)
 
+    if l_strike not in put_options:
+        l_strike -= 500
+    if h_strike not in call_options:
+        h_strike += 500
+
     p_data = [price, put_options[l_strike]['instrument_name'], 
         put_options[l_strike]['strike'], 
         put_options[l_strike]['bid'], 

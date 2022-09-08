@@ -159,19 +159,31 @@ class Deribit_Exchange:
                 )
             )
 
-            while websocket.open and self.keep_alive:
-                data = None
-                message = self.get_response_result(await websocket.recv(), result_prop='params')
+            while self.keep_alive:
+                if websocket.open:
+                    data = None
+                    message = self.get_response_result(await websocket.recv(), result_prop='params')
 
-                if (not message is None and
-                        ('channel' in message) and
-                        ('data' in message)):
+                    if (not message is None and
+                            ('channel' in message) and
+                            ('data' in message)):
 
-                    data = message['data']
-                    self.asset_price = data['price']
-                    self.updated = True
+                        data = message['data']
+                        self.asset_price = data['price']
+                        self.updated = True
 
-                    self.logger.debug(f'Price index: {data}')
+                        self.logger.debug(f'Price index: {data}')
+                
+                else:
+                    self.logger.info(f'Reconnecting Price listener...')
+                    await self.auth(websocket)
+                    await websocket.send(
+                        self.create_message(
+                            'private/subscribe',
+                            { "channels": [f'deribit_price_index.{self.currency.lower()}_usd'] }
+                        )
+                    )
+                    time.sleep(0.5)
 
         self.logger.info('fetch_deribit_price_index listener ended..')
 
@@ -192,35 +204,48 @@ class Deribit_Exchange:
                 )
             )
 
-            while websocket.open and self.keep_alive:
-                data = None
-                message = self.get_response_result(await websocket.recv(), result_prop='params')
+            while self.keep_alive:
+                if websocket.open:
+                    data = None
+                    message = self.get_response_result(await websocket.recv(), result_prop='params')
 
-                if (not message is None and
-                        ('channel' in message) and
-                        ('data' in message)):
+                    if (not message is None and
+                            ('channel' in message) and
+                            ('data' in message)):
 
-                    data = message['data']
-                    self.logger.debug(f'Option quotes: {data}')
+                        data = message['data']
+                        self.logger.debug(f'Option quotes: {data}')
 
-                    new_data = {
-                        'bid': data['best_bid_price'] if data['best_bid_price'] > 0 else np.nan,
-                        'bid_amt': data['best_bid_amount'],
-                        'ask': data['best_ask_price'] if data['best_ask_price'] > 0 else np.nan,
-                        'ask_amt': data['best_ask_amount'],
-                        'delta': data['greeks']['delta'],
-                        'gamma': data['greeks']['gamma'],
-                        'vega': data['greeks']['vega'],
-                        'rho': data['greeks']['rho']
-                    }
+                        new_data = {
+                            'bid': data['best_bid_price'] if data['best_bid_price'] > 0 else np.nan,
+                            'bid_amt': data['best_bid_amount'],
+                            'ask': data['best_ask_price'] if data['best_ask_price'] > 0 else np.nan,
+                            'ask_amt': data['best_ask_amount'],
+                            'delta': data['greeks']['delta'],
+                            'gamma': data['greeks']['gamma'],
+                            'vega': data['greeks']['vega'],
+                            'rho': data['greeks']['rho']
+                        }
 
-                    # func(options_dict, strike, new_data)
-                    options_dict[strike].update(new_data)
-                    self.updated = True
+                        # func(options_dict, strike, new_data)
+                        options_dict[strike].update(new_data)
+                        self.updated = True
+                    
+                    else:
+                        self.logger.info('Data not updated > ')
+                        self.logger.info(f'Message: {message}')
                 
                 else:
-                    self.logger.info('Data not updated > ')
-                    self.logger.info(f'Message: {message}')
+                    self.logger.info(f'Reconnecting listener for {instrument}')
+                    await self.auth(websocket)
+                    await websocket.send(
+                        self.create_message(
+                            'private/subscribe',
+                            # { "channels": [f'quote.{instrument}'] }
+                            { "channels": [f'ticker.{instrument}.raw'] }
+                        )
+                    )
+                    time.sleep(0.5)
 
             self.logger.info(f'fetch_orderbook_data: Listener for {instrument} ended..')
 
