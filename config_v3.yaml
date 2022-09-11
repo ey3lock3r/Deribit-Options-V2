@@ -34,10 +34,13 @@ logging:
 
   handlers:
     console:
-      class: 'logging.StreamHandler'
+      # class: 'logging.StreamHandler'
+      class: 'logging.handlers.TimedRotatingFileHandler'
       level: 'DEBUG'
       formatter: 'simple'
-      stream: 'ext://sys.stdout'
+      filename: 'output_log'
+      when: 'midnight'
+      # stream: 'ext://sys.stdout'
     file:
       class: 'logging.handlers.TimedRotatingFileHandler'
       level: 'FILE'
