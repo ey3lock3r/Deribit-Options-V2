@@ -24,6 +24,7 @@ class CBot:
         self.exchange = exchange
         self.money_mngmt = money_mngmt
         self.arbitrage_strategy = arbitrage_strategy
+        self.count_to_reset = 0
 
         self.logger = (logging.getLogger(logger) if isinstance(logger,str) else logger)
         if self.logger is None:
@@ -43,6 +44,7 @@ class CBot:
         self.call_options = {}
         self.put_options = {}
         self.stop = False
+        self.count_to_reset = 0
 
         # if not first run, rename logfile
         # logfile = date.today().strftime('%y-%m-%d_%H_%M') + '_bot_log.csv'
@@ -91,6 +93,12 @@ class CBot:
             
             else:
                 self.logger.info('Prices not updated')
+                self.count_to_reset += 1
+
+                if self.count_to_reset == 30:
+                    self.exchange.keep_alive = False
+                    self.logger.info('Resetting connection... ')
+
                 time.sleep(self.interval * 0.3)
 
         self.logger.info('check_riskfree_trade ended!')
@@ -184,8 +192,6 @@ class CBot:
                 self.exchange.keep_alive = False
                 self.logger.info(f'Error in run: {E}')
                 self.logger.info(traceback.print_exc())
-                # self.exchange.keep_alive = False
-                # self.stop = True
 
             finally:
                 time.sleep(1)
