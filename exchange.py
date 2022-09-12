@@ -36,9 +36,9 @@ class Deribit_Exchange:
     def init_vals(self):
         # self.logger = logging.getLogger(__name__)
         self.order = {}
-        self._keep_alive = True
-        self._updated = False
-        self._asset_price = 0
+        self.keep_alive = True
+        self.updated = False
+        self.asset_price = 0
 
     @property
     def keep_alive(self) -> bool :
@@ -96,10 +96,16 @@ class Deribit_Exchange:
             return obj[result_prop]
 
         if 'error' in obj and raise_error:
+            self.keep_alive = False
             self.logger.debug('Error found!')
             self.logger.debug(f'Error: code: {obj["error"]["code"]}')
             self.logger.debug(f'Error: msg: {obj["error"]["message"]}')
             raise CBotResponseError(obj['error']['message'],obj['error']['code'])
+
+        else:
+            self.keep_alive = False
+            self.logger.debug('Other unexpected messages!')
+            self.logger.debug(f'Object contents: {obj}')
 
         return None
 

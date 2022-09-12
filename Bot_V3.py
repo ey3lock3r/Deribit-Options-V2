@@ -181,6 +181,7 @@ class CBot:
                 self.logger.info('Keyboard Interrupt detected...')
 
             except Exception as E:
+                self.exchange.keep_alive = False
                 self.logger.info(f'Error in run: {E}')
                 self.logger.info(traceback.print_exc())
                 # self.exchange.keep_alive = False
