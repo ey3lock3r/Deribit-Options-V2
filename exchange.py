@@ -103,7 +103,7 @@ class Deribit_Exchange:
             raise CBotResponseError(obj['error']['message'],obj['error']['code'])
 
         else:
-            self.keep_alive = False
+            # self.keep_alive = False
             self.logger.debug('Other unexpected messages!')
             self.logger.debug(f'Object contents: {obj}')
 
