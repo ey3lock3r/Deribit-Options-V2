@@ -9,6 +9,7 @@ import traceback
 
 from datetime import date
 from typing import Union, Optional, NoReturn
+from exceptions import CBotError
 
 FILE = 60
 
@@ -25,6 +26,7 @@ class CBot:
         self.money_mngmt = money_mngmt
         self.arbitrage_strategy = arbitrage_strategy
         self.count_to_reset = 0
+        self.tasks = []
 
         self.logger = (logging.getLogger(logger) if isinstance(logger,str) else logger)
         if self.logger is None:
@@ -45,6 +47,7 @@ class CBot:
         self.put_options = {}
         self.stop = False
         self.count_to_reset = 0
+        self.tasks = []
 
         # if not first run, rename logfile
         # logfile = date.today().strftime('%y-%m-%d_%H_%M') + '_bot_log.csv'
@@ -96,8 +99,9 @@ class CBot:
                 self.count_to_reset += 1
 
                 if self.count_to_reset == 30:
-                    self.exchange.keep_alive = False
+                    # self.exchange.keep_alive = False
                     self.logger.info('Resetting connection... ')
+                    raise CBotError('Count_to_reset reached!')
 
                 time.sleep(self.interval * 0.3)
 
@@ -138,6 +142,7 @@ class CBot:
             )
 
         self.logger.info(f'Number of tasks: {len(tasks)}')
+        self.tasks = tasks
 
         for task in tasks:
             # await asyncio.gather(task)
@@ -193,10 +198,13 @@ class CBot:
                 self.logger.info(f'Error in run: {E}')
                 self.logger.info(traceback.print_exc())
 
+
             finally:
                 time.sleep(1)
                 loop.run_until_complete(self.exchange.grace_exit())
                 self.logger.info('Gracefully exit')
+                for task in self.tasks:
+                    task.cancel()
                 time.sleep(1)
 
                 if self.stop:
