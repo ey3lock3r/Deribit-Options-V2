@@ -33,13 +33,6 @@ class Deribit_Exchange:
         self.init_vals()
         self.logger.info(f'Bot init for {self.currency} options')
 
-    def init_vals(self):
-        # self.logger = logging.getLogger(__name__)
-        self.order = {}
-        self.keep_alive = True
-        self.updated = False
-        self.asset_price = 0
-
     @property
     def keep_alive(self) -> bool :
         return self._keep_alive
@@ -64,6 +57,13 @@ class Deribit_Exchange:
     def asset_price(self, price: float):
         self._asset_price = price
 
+    def init_vals(self):
+        # self.logger = logging.getLogger(__name__)
+        self.order = {}
+        self.keep_alive = True
+        self.updated = False
+        self.asset_price = 0
+        
     def create_message(self, method: str, params: dict = {},
                         mess_id: Union[int, str, None] = None,
                         as_dict: bool = False) -> Union[str, dict] :
