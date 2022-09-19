@@ -65,10 +65,12 @@ def selling_premiums(put_options, call_options, price):
     # 10-20% max delta strategy
     
     pmax = df_put['delta'].values.argmax()
+    print(pmax)
     df_put_bk = df_put.drop(pmax)
     df_put = df_put.iloc[pmax]
 
     cmax = df_call['delta'].values.argmax()
+    print(cmax)
     df_call_bk = df_call.drop(cmax)
     df_call = df_call.iloc[cmax]
 
