@@ -71,25 +71,25 @@ def selling_premiums(put_options, call_options, price):
 
         data.append(p_data + c_data + ['10-20% Delta Strategy'])
 
-    # 2nd max delta strategy
-    df_put = df_put_bk[df_put_bk['delta'] >= -0.2]
-    df_call = df_call_bk[df_call_bk['delta'] <= 0.2]
+        # 2nd max delta strategy
+        df_put = df_put_bk[df_put_bk['delta'] >= -0.2]
+        df_call = df_call_bk[df_call_bk['delta'] <= 0.2]
 
-    if not df_put.empty and not df_call.empty:
-        pmax = df_put['delta'].values.argmax()
-        cmax = df_call['delta'].values.argmax()
-        df_put =  df_put.drop(df_put.iloc[pmax]['strike'])
-        df_call = df_call.drop(df_call.iloc[cmax]['strike'])
-        pmax = df_put['delta'].values.argmax()
-        cmax = df_call['delta'].values.argmax()
-        df_put = df_put.iloc[pmax]
-        df_call = df_call.iloc[cmax]
+        if not df_put.empty and not df_call.empty:
+            pmax = df_put['delta'].values.argmax()
+            cmax = df_call['delta'].values.argmax()
+            df_put =  df_put.drop(df_put.iloc[pmax]['strike'])
+            df_call = df_call.drop(df_call.iloc[cmax]['strike'])
+            pmax = df_put['delta'].values.argmax()
+            cmax = df_call['delta'].values.argmax()
+            df_put = df_put.iloc[pmax]
+            df_call = df_call.iloc[cmax]
 
-        # if df_put['bid'] + df_call['bid'] >= 0.008:
-        p_data = [price, df_put['instrument_name'], df_put['strike'], df_put['bid'], df_put['delta'], df_put['gamma'], df_put['vega'], df_put['rho']]
-        c_data = [df_call['instrument_name'], df_call['strike'], df_call['bid'], df_call['delta'], df_call['gamma'], df_call['vega'], df_call['rho']]
+            # if df_put['bid'] + df_call['bid'] >= 0.008:
+            p_data = [price, df_put['instrument_name'], df_put['strike'], df_put['bid'], df_put['delta'], df_put['gamma'], df_put['vega'], df_put['rho']]
+            c_data = [df_call['instrument_name'], df_call['strike'], df_call['bid'], df_call['delta'], df_call['gamma'], df_call['vega'], df_call['rho']]
 
-        data.append(p_data + c_data + ['2nd Max Delta Strategy'])
+            data.append(p_data + c_data + ['2nd Max Delta Strategy'])
 
     return np.array(data, dtype=str)
 
