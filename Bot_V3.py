@@ -26,7 +26,6 @@ class CBot:
         self.money_mngmt = money_mngmt
         self.arbitrage_strategy = arbitrage_strategy
         self.count_to_reset = 0
-        self.tasks = []
 
         self.logger = (logging.getLogger(logger) if isinstance(logger,str) else logger)
         if self.logger is None:
@@ -47,7 +46,6 @@ class CBot:
         self.put_options = {}
         self.stop = False
         self.count_to_reset = 0
-        self.tasks = []
 
         # if not first run, rename logfile
         # logfile = date.today().strftime('%y-%m-%d_%H_%M') + '_bot_log.csv'
@@ -117,8 +115,8 @@ class CBot:
         tasks = []
 
         tasks.append(asyncio.to_thread(self.check_riskfree_trade))
-        tasks.append(asyncio.ensure_future(self.end_of_day()))
-        tasks.append(asyncio.ensure_future(self.exchange.fetch_deribit_price_index()))
+        tasks.append(asyncio.create_task(self.end_of_day()))
+        tasks.append(asyncio.create_task(self.exchange.fetch_deribit_price_index()))
         self.call_options, self.put_options = await self.exchange.prepare_option_struct()
 
         # if not self.call_options or not self.put_options:
@@ -129,20 +127,19 @@ class CBot:
 
         for key, val in self.call_options.items():
             tasks.append(
-                asyncio.ensure_future(
+                asyncio.create_task(
                     self.exchange.fetch_orderbook_data(key, val['instrument_name'], self.call_options)
                 )
             )
         
         for key, val in self.put_options.items():
             tasks.append(
-                asyncio.ensure_future(
+                asyncio.create_task(
                     self.exchange.fetch_orderbook_data(key, val['instrument_name'], self.put_options)
                 )
             )
 
         self.logger.info(f'Number of tasks: {len(tasks)}')
-        self.tasks = tasks
 
         for task in tasks:
             # await asyncio.gather(task)
@@ -203,7 +200,7 @@ class CBot:
                 time.sleep(1)
                 loop.run_until_complete(self.exchange.grace_exit())
                 self.logger.info('Gracefully exit')
-                for task in self.tasks:
+                for task in asyncio.Task.all_tasks():
                     task.cancel()
                 time.sleep(1)
 
