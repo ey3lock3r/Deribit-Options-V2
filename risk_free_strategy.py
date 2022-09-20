@@ -49,27 +49,27 @@ def selling_premiums(put_options, call_options, price):
     data.append(p_data + c_data + ['1.5k Dist Strategy'])
 
     # create put/call dataframes and check if empty
-    df_put = pd.DataFrame(put_options.values())
-    df_put.set_index('strike', inplace=True, drop=False)
-    df_put = df_put[(df_put['delta'] <= -0.1) & (df_put['delta'] >= -0.2)]
+    df_put_bk = pd.DataFrame(put_options.values())
+    df_put_bk.set_index('strike', inplace=True, drop=False)
+    df_put = df_put_bk[(df_put_bk['delta'] <= -0.1) & (df_put_bk['delta'] >= -0.2)]
     if df_put.empty:
         print('empty put - 10-20% max strategy')
         return np.array(data, dtype=str)
 
-    df_call = pd.DataFrame(call_options.values())
-    df_call.set_index('strike', inplace=True, drop=False)
-    df_call = df_call[(df_call['delta'] >= 0.1) & (df_call['delta'] <= 0.2)]
+    df_call_bk = pd.DataFrame(call_options.values())
+    df_call_bk.set_index('strike', inplace=True, drop=False)
+    df_call = df_call_bk[(df_call_bk['delta'] >= 0.1) & (df_call_bk['delta'] <= 0.2)]
     if df_call.empty:
         print('empty call - 10-20% max strategy')
         return np.array(data, dtype=str)
 
     # 10-20% max delta strategy
     pmax = df_put['delta'].values.argmax()
-    df_put_bk = df_put.drop(df_put.iloc[pmax]['strike'])
+    # df_put_bk = df_put.drop(df_put.iloc[pmax]['strike'])
     df_put = df_put.iloc[pmax]
 
     cmax = df_call['delta'].values.argmax()
-    df_call_bk = df_call.drop(df_call.iloc[cmax]['strike'])
+    # df_call_bk = df_call.drop(df_call.iloc[cmax]['strike'])
     df_call = df_call.iloc[cmax]
 
     # if df_put['bid'] + df_call['bid'] >= 0.008:
@@ -79,8 +79,9 @@ def selling_premiums(put_options, call_options, price):
     data.append(p_data + c_data + ['10-20% Delta Strategy'])
 
     # 2nd max delta strategy
-    df_put = df_put_bk
-    df_call = df_call_bk
+    df_put = df_put_bk[df_put_bk['delta'] >= -0.2]
+    df_call = df_call_bk[df_call_bk['delta'] <= 0.2]
+
     if df_put.empty:
         print('empty put - 2nd max strategy')
         return np.array(data, dtype=str)
@@ -88,8 +89,17 @@ def selling_premiums(put_options, call_options, price):
         print('empty call - 2nd max strategy')
         return np.array(data, dtype=str)
 
-    df_put = df_put.iloc[df_put['delta'].values.argmax()]
-    df_call = df_call.iloc[df_call['delta'].values.argmax()]
+    pmax = df_put['delta'].values.argmax()
+    cmax = df_call['delta'].values.argmax()
+    df_put =  df_put.drop(df_put.iloc[pmax]['strike'])
+    df_call = df_call.drop(df_call.iloc[cmax]['strike'])
+    pmax = df_put['delta'].values.argmax()
+    cmax = df_call['delta'].values.argmax()
+    df_put = df_put.iloc[pmax]
+    df_call = df_call.iloc[cmax]
+
+    # df_put = df_put.iloc[df_put['delta'].values.argmax()]
+    # df_call = df_call.iloc[df_call['delta'].values.argmax()]
 
     # if df_put['bid'] + df_call['bid'] >= 0.008:
     p_data = [price, df_put['instrument_name'], df_put['strike'], df_put['bid'], df_put['delta'], df_put['gamma'], df_put['vega'], df_put['rho']]
