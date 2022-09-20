@@ -30,23 +30,23 @@ def selling_premiums(put_options, call_options, price):
     if h_strike not in call_options:
         h_strike += 500
 
-    if put_options[l_strike]['bid'] + call_options[h_strike]['bid'] >= 0.008:
-        p_data = [price, put_options[l_strike]['instrument_name'], 
-            put_options[l_strike]['strike'], 
-            put_options[l_strike]['bid'], 
-            put_options[l_strike]['delta'], 
-            put_options[l_strike]['gamma'], 
-            put_options[l_strike]['vega'], 
-            put_options[l_strike]['rho']]
-        c_data = [call_options[h_strike]['instrument_name'], 
-            call_options[h_strike]['strike'], 
-            call_options[h_strike]['bid'], 
-            call_options[h_strike]['delta'], 
-            call_options[h_strike]['gamma'], 
-            call_options[h_strike]['vega'], 
-            call_options[h_strike]['rho']]
+    # if put_options[l_strike]['bid'] + call_options[h_strike]['bid'] >= 0.008:
+    p_data = [price, put_options[l_strike]['instrument_name'], 
+        put_options[l_strike]['strike'], 
+        put_options[l_strike]['bid'], 
+        put_options[l_strike]['delta'], 
+        put_options[l_strike]['gamma'], 
+        put_options[l_strike]['vega'], 
+        put_options[l_strike]['rho']]
+    c_data = [call_options[h_strike]['instrument_name'], 
+        call_options[h_strike]['strike'], 
+        call_options[h_strike]['bid'], 
+        call_options[h_strike]['delta'], 
+        call_options[h_strike]['gamma'], 
+        call_options[h_strike]['vega'], 
+        call_options[h_strike]['rho']]
 
-        data.append(p_data + c_data + ['1.5k Dist Strategy'])
+    data.append(p_data + c_data + ['1.5k Dist Strategy'])
 
     # create put/call dataframes and check if empty
     df_put = pd.DataFrame(put_options.values())
@@ -72,11 +72,11 @@ def selling_premiums(put_options, call_options, price):
     df_call_bk = df_call.drop(df_call.iloc[cmax]['strike'])
     df_call = df_call.iloc[cmax]
 
-    if df_put['bid'] + df_call['bid'] >= 0.008:
-        p_data = [price, df_put['instrument_name'], df_put['strike'], df_put['bid'], df_put['delta'], df_put['gamma'], df_put['vega'], df_put['rho']]
-        c_data = [df_call['instrument_name'], df_call['strike'], df_call['bid'], df_call['delta'], df_call['gamma'], df_call['vega'], df_call['rho']]
+    # if df_put['bid'] + df_call['bid'] >= 0.008:
+    p_data = [price, df_put['instrument_name'], df_put['strike'], df_put['bid'], df_put['delta'], df_put['gamma'], df_put['vega'], df_put['rho']]
+    c_data = [df_call['instrument_name'], df_call['strike'], df_call['bid'], df_call['delta'], df_call['gamma'], df_call['vega'], df_call['rho']]
 
-        data.append(p_data + c_data + ['10-20% Delta Strategy'])
+    data.append(p_data + c_data + ['10-20% Delta Strategy'])
 
     # 2nd max delta strategy
     df_put = df_put_bk
@@ -91,11 +91,11 @@ def selling_premiums(put_options, call_options, price):
     df_put = df_put.iloc[df_put['delta'].values.argmax()]
     df_call = df_call.iloc[df_call['delta'].values.argmax()]
 
-    if df_put['bid'] + df_call['bid'] >= 0.008:
-        p_data = [price, df_put['instrument_name'], df_put['strike'], df_put['bid'], df_put['delta'], df_put['gamma'], df_put['vega'], df_put['rho']]
-        c_data = [df_call['instrument_name'], df_call['strike'], df_call['bid'], df_call['delta'], df_call['gamma'], df_call['vega'], df_call['rho']]
+    # if df_put['bid'] + df_call['bid'] >= 0.008:
+    p_data = [price, df_put['instrument_name'], df_put['strike'], df_put['bid'], df_put['delta'], df_put['gamma'], df_put['vega'], df_put['rho']]
+    c_data = [df_call['instrument_name'], df_call['strike'], df_call['bid'], df_call['delta'], df_call['gamma'], df_call['vega'], df_call['rho']]
 
-        data.append(p_data + c_data + ['2nd Max Delta Strategy'])
+    data.append(p_data + c_data + ['2nd Max Delta Strategy'])
 
     return np.array(data, dtype=str)
 
