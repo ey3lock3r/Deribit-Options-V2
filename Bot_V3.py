@@ -200,7 +200,7 @@ class CBot:
                 time.sleep(1)
                 loop.run_until_complete(self.exchange.grace_exit())
                 self.logger.info('Gracefully exit')
-                for task in asyncio.Task.all_tasks():
+                for task in asyncio.all_tasks():
                     task.cancel()
                 time.sleep(1)
 
