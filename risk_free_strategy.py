@@ -76,12 +76,12 @@ def selling_premiums(put_options, call_options, price):
         df_call = df_call_bk[df_call_bk['delta'] <= 0.2]
 
         if not df_put.empty and not df_call.empty:
-            pmax = df_put['delta'].values.argmax()
-            cmax = df_call['delta'].values.argmax()
+            pmax = df_put['delta'].values.argmin()
+            cmax = df_call['delta'].values.argmin()
             df_put =  df_put.drop(df_put.iloc[pmax]['strike'])
             df_call = df_call.drop(df_call.iloc[cmax]['strike'])
-            pmax = df_put['delta'].values.argmax()
-            cmax = df_call['delta'].values.argmax()
+            pmax = df_put['delta'].values.argmin()
+            cmax = df_call['delta'].values.argmin()
             df_put = df_put.iloc[pmax]
             df_call = df_call.iloc[cmax]
 
