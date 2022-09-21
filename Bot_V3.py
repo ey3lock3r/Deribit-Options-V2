@@ -25,7 +25,6 @@ class CBot:
         self.exchange = exchange
         self.money_mngmt = money_mngmt
         self.arbitrage_strategy = arbitrage_strategy
-        self.count_to_reset = 0
 
         self.logger = (logging.getLogger(logger) if isinstance(logger,str) else logger)
         if self.logger is None:
@@ -46,6 +45,7 @@ class CBot:
         self.put_options = {}
         self.stop = False
         self.count_to_reset = 0
+        self.tasks = []
 
         # if not first run, rename logfile
         # logfile = date.today().strftime('%y-%m-%d_%H_%M') + '_bot_log.csv'
@@ -140,6 +140,7 @@ class CBot:
             )
 
         self.logger.info(f'Number of tasks: {len(tasks)}')
+        self.tasks = tasks
 
         for task in tasks:
             # await asyncio.gather(task)
@@ -170,11 +171,12 @@ class CBot:
 
     async def end_of_day(self):
         # await asyncio.sleep( 86400 - time.time() % 86400 + 28800)   # 24hrs + 8hrs, 8am
-        await asyncio.sleep(5)
+        await asyncio.sleep(60)
         # await asyncio.sleep( 120 - time.time() % 120 )
         self.exchange.keep_alive = False
         self.logger.info('End of day!')
-        await asyncio.sleep( 600 )  # sleep/wait for 10 minutes before starting
+        # await asyncio.sleep( 600 )  # sleep/wait for 10 minutes before starting
+        await asyncio.sleep(60)
         
     def run(self) -> NoReturn:
         """Wrapper for start to run without additional libraries for managing asynchronous"""
@@ -201,7 +203,8 @@ class CBot:
                 time.sleep(1)
                 loop.run_until_complete(self.exchange.grace_exit())
                 self.logger.info('Gracefully exit')
-                for task in asyncio.all_tasks():
+                # for task in asyncio.all_tasks():
+                for task in self.tasks:
                     task.cancel()
                 time.sleep(1)
 
