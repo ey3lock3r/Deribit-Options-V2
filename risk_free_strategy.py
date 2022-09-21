@@ -59,10 +59,10 @@ def selling_premiums(put_options, call_options, price):
 
     # 10-20% max delta strategy
     if not df_put.empty and not df_call.empty:
-        pmax = df_put['delta'].values.argmax()
+        pmin = df_put['delta'].values.argmin()
         cmax = df_call['delta'].values.argmax()
 
-        df_put = df_put.iloc[pmax]
+        df_put = df_put.iloc[pmin]
         df_call = df_call.iloc[cmax]
 
         # if df_put['bid'] + df_call['bid'] >= 0.008:
@@ -76,13 +76,13 @@ def selling_premiums(put_options, call_options, price):
         df_call = df_call_bk[df_call_bk['delta'] <= 0.2]
 
         if not df_put.empty and not df_call.empty:
-            pmax = df_put['delta'].values.argmin()
+            pmin = df_put['delta'].values.argmin()
             cmax = df_call['delta'].values.argmin()
-            df_put =  df_put.drop(df_put.iloc[pmax]['strike'])
+            df_put =  df_put.drop(df_put.iloc[pmin]['strike'])
             df_call = df_call.drop(df_call.iloc[cmax]['strike'])
-            pmax = df_put['delta'].values.argmin()
+            pmin = df_put['delta'].values.argmin()
             cmax = df_call['delta'].values.argmin()
-            df_put = df_put.iloc[pmax]
+            df_put = df_put.iloc[pmin]
             df_call = df_call.iloc[cmax]
 
             # if df_put['bid'] + df_call['bid'] >= 0.008:
