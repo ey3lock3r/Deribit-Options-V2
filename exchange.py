@@ -139,6 +139,80 @@ class Deribit_Exchange:
 
         return self.get_response_result(await ws.recv())
 
+    async def create_order(self, ws, instrument: str, price: float, amount: float, 
+                            direction: str = 'sell',
+                            raise_error: bool = True):
+
+        await ws.send(
+            self.create_message(
+                f'private/{direction}',
+                { 'instrument_name' : instrument,
+                  'amount' : amount,
+                  'type' : 'limit',
+                  'price' : price }
+            )
+        )
+
+        order_res = self.get_response_result(await ws.recv(), raise_error = raise_error)
+
+        return COrder(order = (None if order_res is None else order_res['order']))
+
+    async def cancel_all_by_currency(self, ws, currency: str = 'BTC', kind: str = 'option',
+                            raise_error: bool = True):
+
+        await ws.send(
+            self.create_message(
+                f'private/cancel_all_by_currency',
+                { 'currency': currency,
+                  'kind': kind }
+            )
+        )
+
+        order_res = self.get_response_result(await ws.recv(), raise_error = raise_error)
+
+        return COrder(order_res)
+
+
+    async def get_order_state(self, ws, order_id: Union[int, str],
+                                raise_error: bool = True):
+
+        await ws.send(
+            self.create_message(
+                f'private/get_order_state',
+                { 'order_id': order_id }
+            )
+        )
+
+        return COrder(self.get_response_result(await ws.recv(), raise_error = raise_error))
+
+    async def get_open_orders_by_currency(self, ws, currency: str = 'BTC', kind: str = 'option'
+                                raise_error: bool = True):
+
+        await ws.send(
+            self.create_message(
+                f'private/get_open_orders_by_currency',
+                { 'currency': currency,
+                  'kind': kind }
+            )
+        )
+
+        return COrder(self.get_response_result(await ws.recv(), raise_error = raise_error))
+
+    async def close_position(self, ws, instrument: str, price: float, 
+                                ordtype: str = 'limit',
+                                raise_error: bool = True):
+
+        await ws.send(
+            self.create_message(
+                f'private/close_position',
+                { 'instrument_name': instrument,
+                  'type': ordtype, 
+                  'price': price }
+            )
+        )
+
+        return COrder(self.get_response_result(await ws.recv(), raise_error = raise_error))
+
     async def unsubscribe_all(self, ws) -> Optional[dict]:
         self.logger.info('unsubscribe_all')
 
@@ -151,7 +225,7 @@ class Deribit_Exchange:
 
         return self.get_response_result(await ws.recv())
 
-    async def fetch_deribit_price_index(self) -> NoReturn:
+    async def fetch_deribit_price_index(self, order_mgmt_func=None) -> NoReturn:
         """Реализует логику работы бота"""
 
         async with websockets.connect(self.url) as websocket:
@@ -179,6 +253,9 @@ class Deribit_Exchange:
                         self.updated = True
 
                         self.logger.debug(f'Price index: {data}')
+
+                        if order_mgmt_func:
+                            await order_mgmt_func()
                 
                 else:
                     self.logger.info(f'Reconnecting Price listener...')
