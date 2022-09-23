@@ -41,8 +41,6 @@ class CBot:
     #     self.calculate_mmargin()
 
     def init_vals(self):
-        self.call_options = {}
-        self.put_options = {}
         self.stop = False
         self.count_to_reset = 0
         self.tasks = []
@@ -77,7 +75,7 @@ class CBot:
             if self.exchange.updated:
                 price = self.exchange.asset_price
 
-                df_arbi = self.arbitrage_strategy(self.put_options, self.call_options, price)
+                df_arbi = self.arbitrage_strategy(self.exchange.put_options, self.exchange.call_options, price)
 
                 if df_arbi.size:
                     self.logger.info(f'Price index: {price}')
@@ -117,25 +115,25 @@ class CBot:
         tasks.append(asyncio.to_thread(self.check_riskfree_trade))
         tasks.append(asyncio.create_task(self.end_of_day()))
         tasks.append(asyncio.create_task(self.exchange.fetch_deribit_price_index()))
-        self.call_options, self.put_options = await self.exchange.prepare_option_struct()
+        self.exchange.call_options, self.exchange.put_options = await self.exchange.prepare_option_struct()
 
-        # if not self.call_options or not self.put_options:
+        # if not self.exchange.call_options or not self.exchange.put_options:
         #     return
 
         # def update_options_dict(options_dict, strike: str, new_data) -> NoReturn:
         #     options_dict[strike].update(new_data)
 
-        for key, val in self.call_options.items():
+        for key, val in self.exchange.call_options.items():
             tasks.append(
                 asyncio.create_task(
-                    self.exchange.fetch_orderbook_data(key, val['instrument_name'], self.call_options)
+                    self.exchange.fetch_orderbook_data(key, val['instrument_name'], self.exchange.call_options)
                 )
             )
         
-        for key, val in self.put_options.items():
+        for key, val in self.exchange.put_options.items():
             tasks.append(
                 asyncio.create_task(
-                    self.exchange.fetch_orderbook_data(key, val['instrument_name'], self.put_options)
+                    self.exchange.fetch_orderbook_data(key, val['instrument_name'], self.exchange.put_options)
                 )
             )
 
@@ -155,11 +153,11 @@ class CBot:
         # with concurrent.futures.ThreadPoolExecutor() as executor:
         # #     [executor.submit(task) for task in tasks]
 
-        #     for key, val in self.call_options.items():
+        #     for key, val in self.exchange.call_options.items():
         #         executor.submit(self.fetch_orderbook_data, key, val['instrument_name'], val['option_type'])
         #         # tasks.append([self.fetch_orderbook_data, key, val['instrument_name'], val['option_type']])
             
-        #     for key, val in self.put_options.items():
+        #     for key, val in self.exchange.put_options.items():
         #         executor.submit(self.fetch_orderbook_data, key, val['instrument_name'], val['option_type'])
         #         # tasks.append([self.fetch_orderbook_data, key, val['instrument_name'], val['option_type']])
 

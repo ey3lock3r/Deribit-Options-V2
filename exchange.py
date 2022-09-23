@@ -59,10 +59,12 @@ class Deribit_Exchange:
 
     def init_vals(self):
         # self.logger = logging.getLogger(__name__)
-        self.order = {}
+        self.orders = {}
         self.keep_alive = True
         self.updated = False
         self.asset_price = 0
+        self.put_options = {}
+        self.call_options = {}
         
     def create_message(self, method: str, params: dict = {},
                         mess_id: Union[int, str, None] = None,
@@ -139,7 +141,7 @@ class Deribit_Exchange:
 
         return self.get_response_result(await ws.recv())
 
-    async def create_order(self, ws, instrument: str, price: float, amount: float, 
+    async def create_order(self, ws, instrument: str, price: float, amount: float, option_type: str, stike: str,
                             direction: str = 'sell',
                             raise_error: bool = True):
 
@@ -153,10 +155,15 @@ class Deribit_Exchange:
             )
         )
 
+        info = {'option_type': option_type,
+                'stike': stike }
+
         order_res = self.get_response_result(await ws.recv(), raise_error = raise_error)
+        order = order_res['order']
+        order.update(info)
+        self.orders[order['order_id']] = order  # todo modify to select only some attrs ?
 
-        return COrder(order = (None if order_res is None else order_res['order']))
-
+    # todo delete, not needed ?
     async def cancel_all_by_currency(self, ws, currency: str = 'BTC', kind: str = 'option',
                             raise_error: bool = True):
 
@@ -168,10 +175,7 @@ class Deribit_Exchange:
             )
         )
 
-        order_res = self.get_response_result(await ws.recv(), raise_error = raise_error)
-
-        return COrder(order_res)
-
+        return self.get_response_result(await ws.recv(), raise_error = raise_error)
 
     async def get_order_state(self, ws, order_id: Union[int, str],
                                 raise_error: bool = True):
@@ -183,7 +187,7 @@ class Deribit_Exchange:
             )
         )
 
-        return COrder(self.get_response_result(await ws.recv(), raise_error = raise_error))
+        return self.get_response_result(await ws.recv(), raise_error = raise_error)
 
     async def get_open_orders_by_currency(self, ws, currency: str = 'BTC', kind: str = 'option'
                                 raise_error: bool = True):
@@ -196,7 +200,8 @@ class Deribit_Exchange:
             )
         )
 
-        return COrder(self.get_response_result(await ws.recv(), raise_error = raise_error))
+        return self.get_response_result(await ws.recv(), raise_error = raise_error)
+
 
     async def close_position(self, ws, instrument: str, price: float, 
                                 ordtype: str = 'limit',
@@ -211,7 +216,8 @@ class Deribit_Exchange:
             )
         )
 
-        return COrder(self.get_response_result(await ws.recv(), raise_error = raise_error))
+        self.get_response_result(await ws.recv(), raise_error = raise_error)
+        
 
     async def unsubscribe_all(self, ws) -> Optional[dict]:
         self.logger.info('unsubscribe_all')
@@ -224,8 +230,25 @@ class Deribit_Exchange:
         )
 
         return self.get_response_result(await ws.recv())
+    
+    async def order_mgmt_func(self, ws):
 
-    async def fetch_deribit_price_index(self, order_mgmt_func=None) -> NoReturn:
+        for order in self.orders:
+            if (order['option_type'] == 'put' and self.asset_price <= order['strike']) or 
+               (order['option_type'] == 'call' and self.asset_price >= order['strike']):
+
+                if order['option_type'] == 'put':
+                    price = self.put_options[order['strike']]['ask']
+                else:
+                    price = self.call_options[order['strike']]['ask']
+                
+                order_res = await self.close_position(ws, order['instrument_name'], price)
+                order = order_res['order']
+                self.orders.pop(order['order_id'], None)
+
+                asyncio.sleep(0.5)
+
+    async def fetch_deribit_price_index(self) -> NoReturn:
         """Реализует логику работы бота"""
 
         async with websockets.connect(self.url) as websocket:
@@ -254,8 +277,7 @@ class Deribit_Exchange:
 
                         self.logger.debug(f'Price index: {data}')
 
-                        if order_mgmt_func:
-                            await order_mgmt_func()
+                        await self.order_mgmt_func(websocket)
                 
                 else:
                     self.logger.info(f'Reconnecting Price listener...')
