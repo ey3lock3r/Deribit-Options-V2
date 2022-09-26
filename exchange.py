@@ -189,7 +189,7 @@ class Deribit_Exchange:
 
         return self.get_response_result(await ws.recv(), raise_error = raise_error)
 
-    async def get_open_orders_by_currency(self, ws, currency: str = 'BTC', kind: str = 'option'
+    async def get_open_orders_by_currency(self, ws, currency: str = 'BTC', kind: str = 'option',
                                 raise_error: bool = True):
 
         await ws.send(
