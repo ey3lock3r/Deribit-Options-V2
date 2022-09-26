@@ -141,27 +141,21 @@ class Deribit_Exchange:
 
         return self.get_response_result(await ws.recv())
 
-    async def create_order(self, ws, instrument: str, price: float, amount: float, option_type: str, stike: str,
+    async def create_order(self, ws, instrument_name: str, price: float, amount: float,
                             direction: str = 'sell',
                             raise_error: bool = True):
 
         await ws.send(
             self.create_message(
                 f'private/{direction}',
-                { 'instrument_name' : instrument,
+                { 'instrument_name' : instrument_name,
                   'amount' : amount,
                   'type' : 'limit',
                   'price' : price }
             )
         )
 
-        info = {'option_type': option_type,
-                'stike': stike }
-
-        order_res = self.get_response_result(await ws.recv(), raise_error = raise_error)
-        order = order_res['order']
-        order.update(info)
-        self.orders[order['order_id']] = order  # todo modify to select only some attrs ?
+        return self.get_response_result(await ws.recv(), raise_error = raise_error)
 
     # todo delete, not needed ?
     async def cancel_all_by_currency(self, ws, currency: str = 'BTC', kind: str = 'option',
@@ -203,14 +197,14 @@ class Deribit_Exchange:
         return self.get_response_result(await ws.recv(), raise_error = raise_error)
 
 
-    async def close_position(self, ws, instrument: str, price: float, 
+    async def close_position(self, ws, instrument_name: str, price: float, 
                                 ordtype: str = 'limit',
                                 raise_error: bool = True):
 
         await ws.send(
             self.create_message(
                 f'private/close_position',
-                { 'instrument_name': instrument,
+                { 'instrument_name': instrument_name,
                   'type': ordtype, 
                   'price': price }
             )
@@ -230,6 +224,21 @@ class Deribit_Exchange:
         )
 
         return self.get_response_result(await ws.recv())
+
+    async def post_orders(self, ws, order_list: dict = {}):
+
+        for order in order_list:
+            order_res = await self.create_order(
+                instrument_name=order['instrument_name'],
+                price=order['bid'],
+                amount=order['amount']
+            )
+            if 'order' in order_res['order']:
+                info = { 'option_type': order['option_type'], 'stike': order['stike'] }
+
+                order_det = order_res['order']
+                order_det.update(info)
+                self.orders[order_det['order_id']] = order_det  # todo modify to select only some attrs ?
     
     async def order_mgmt_func(self, ws):
 
@@ -237,10 +246,7 @@ class Deribit_Exchange:
             if (order['option_type'] == 'put' and self.asset_price <= order['strike']) or \
                (order['option_type'] == 'call' and self.asset_price >= order['strike']):
 
-                if order['option_type'] == 'put':
-                    price = self.put_options[order['strike']]['ask']
-                else:
-                    price = self.call_options[order['strike']]['ask']
+                price = order['ask']
                 
                 order_res = await self.close_position(ws, order['instrument_name'], price)
                 order = order_res['order']
@@ -292,10 +298,10 @@ class Deribit_Exchange:
 
         self.logger.info('fetch_deribit_price_index listener ended..')
 
-    async def fetch_orderbook_data(self, strike: str, instrument: str, options_dict: dict) -> NoReturn:
+    async def fetch_orderbook_data(self, strike: str, instrument_name: str, options_dict: dict) -> NoReturn:
         """Реализует логику работы бота"""
 
-        self.logger.info(f'fetch_orderbook_data: Listener for {instrument} started..')
+        self.logger.info(f'fetch_orderbook_data: Listener for {instrument_name} started..')
 
         async with websockets.connect(self.url) as websocket:
 
@@ -304,8 +310,8 @@ class Deribit_Exchange:
             await websocket.send(
                 self.create_message(
                     'private/subscribe',
-                    # { "channels": [f'quote.{instrument}'] }
-                    { "channels": [f'ticker.{instrument}.raw'] }
+                    # { "channels": [f'quote.{instrument_name}'] }
+                    { "channels": [f'ticker.{instrument_name}.raw'] }
                 )
             )
 
@@ -341,18 +347,18 @@ class Deribit_Exchange:
                         self.logger.info(f'Message: {message}')
                 
                 else:
-                    self.logger.info(f'Reconnecting listener for {instrument}')
+                    self.logger.info(f'Reconnecting listener for {instrument_name}')
                     await self.auth(websocket)
                     await websocket.send(
                         self.create_message(
                             'private/subscribe',
-                            # { "channels": [f'quote.{instrument}'] }
-                            { "channels": [f'ticker.{instrument}.raw'] }
+                            # { "channels": [f'quote.{instrument_name}'] }
+                            { "channels": [f'ticker.{instrument_name}.raw'] }
                         )
                     )
                     time.sleep(0.5)
 
-            self.logger.info(f'fetch_orderbook_data: Listener for {instrument} ended..')
+            self.logger.info(f'fetch_orderbook_data: Listener for {instrument_name} ended..')
 
     async def prepare_option_struct(self) -> NoReturn:
         self.logger.info('prepare_option_struct')

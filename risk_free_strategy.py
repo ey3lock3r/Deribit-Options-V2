@@ -8,7 +8,7 @@ df_initcols = ['strike', 'instrument_name', 'option_type', 'settlement_period']
 
 # def filter_option()
 
-def selling_premiums(put_options, call_options, price):
+def selling_premiums_bk(put_options, call_options, price):
     data = []
 
     # 1500 distance
@@ -18,12 +18,12 @@ def selling_premiums(put_options, call_options, price):
     h_strike = 0
 
     if price > l_price + 250:
-        l_strike = h_price - 1000
-        h_strike = h_price + 1000
+        l_strike = h_price - 1000.0
+        h_strike = h_price + 1000.0
 
     else:
-        l_strike = float(l_price - 1000)
-        h_strike = float(l_price + 1000)
+        l_strike = l_price - 1000.0
+        h_strike = l_price + 1000.0
 
     if l_strike not in put_options:
         l_strike -= 500
@@ -78,6 +78,7 @@ def selling_premiums(put_options, call_options, price):
         if not df_put.empty and not df_call.empty and not np.isnan(df_put['bid']) and not np.isnan(df_call['bid']):
             pmin = df_put['delta'].values.argmin()
             cmax = df_call['delta'].values.argmin()
+
             df_put =  df_put.drop(df_put.iloc[pmin]['strike'])
             df_call = df_call.drop(df_call.iloc[cmax]['strike'])
             pmin = df_put['delta'].values.argmin()
@@ -92,6 +93,124 @@ def selling_premiums(put_options, call_options, price):
             data.append(p_data + c_data + ['2nd Max Delta Strategy'])
 
     return np.array(data, dtype=str)
+
+def selling_premiums(put_options, call_options, price):
+    data = []
+
+    res = dist_1500(put_options, call_options, price)
+    if res:
+        data.append(res)
+
+    res = delta_10_20(put_options, call_options, price)
+    if res:
+        data.append(res)
+    
+        res = delta_2nd_max(put_options, call_options, price)
+        if res:
+            data.append(res)
+
+def dist_1500(put_options, call_options, price):
+    data = []
+
+    # 1500 distance
+    l_price = price - price % 500
+    h_price = l_price + 500
+    l_strike = 0
+    h_strike = 0
+
+    if price > l_price + 250:
+        l_strike = h_price - 1000.0
+        h_strike = h_price + 1000.0
+
+    else:
+        l_strike = l_price - 1000.0
+        h_strike = l_price + 1000.0
+
+    if l_strike not in put_options:
+        l_strike -= 500
+    if h_strike not in call_options:
+        h_strike += 500
+
+    # if put_options[l_strike]['bid'] + call_options[h_strike]['bid'] >= 0.008:
+    p_data = [price, put_options[l_strike]['instrument_name'], 
+        put_options[l_strike]['strike'], 
+        put_options[l_strike]['bid'], 
+        put_options[l_strike]['delta'], 
+        put_options[l_strike]['gamma'], 
+        put_options[l_strike]['vega'], 
+        put_options[l_strike]['rho']]
+    c_data = [call_options[h_strike]['instrument_name'], 
+        call_options[h_strike]['strike'], 
+        call_options[h_strike]['bid'], 
+        call_options[h_strike]['delta'], 
+        call_options[h_strike]['gamma'], 
+        call_options[h_strike]['vega'], 
+        call_options[h_strike]['rho']]
+
+    if not np.isnan(put_options[l_strike]['bid']) and not np.isnan(call_options[h_strike]['bid']):
+        data.append(p_data + c_data + ['1.5k Dist Strategy'])
+
+    return data
+
+def delta_10_20(put_options, call_options, price):
+    data = []
+    # create put/call dataframes and check if empty
+    df_put_bk = pd.DataFrame(put_options.values())
+    df_put_bk.set_index('strike', inplace=True, drop=False)
+    df_put = df_put_bk[(df_put_bk['delta'] <= -0.1) & (df_put_bk['delta'] >= -0.2)]
+
+    df_call_bk = pd.DataFrame(call_options.values())
+    df_call_bk.set_index('strike', inplace=True, drop=False)
+    df_call = df_call_bk[(df_call_bk['delta'] >= 0.1) & (df_call_bk['delta'] <= 0.2)]
+
+    if not df_put.empty and not df_call.empty:
+        pmin = df_put['delta'].values.argmin()
+        cmax = df_call['delta'].values.argmax()
+
+        df_put = df_put.iloc[pmin]
+        df_call = df_call.iloc[cmax]
+
+        # if df_put['bid'] + df_call['bid'] >= 0.008:
+        p_data = [price, df_put['instrument_name'], df_put['strike'], df_put['bid'], df_put['delta'], df_put['gamma'], df_put['vega'], df_put['rho']]
+        c_data = [df_call['instrument_name'], df_call['strike'], df_call['bid'], df_call['delta'], df_call['gamma'], df_call['vega'], df_call['rho']]
+
+        data.append(p_data + c_data + ['10-20% Delta Strategy'])
+
+    return data
+
+def delta_2nd_max(put_options, call_options, price):
+    data = []
+
+    df_put_bk = pd.DataFrame(put_options.values())
+    df_put_bk.set_index('strike', inplace=True, drop=False)
+
+    df_call_bk = pd.DataFrame(call_options.values())
+    df_call_bk.set_index('strike', inplace=True, drop=False)
+
+    df_put = df_put_bk[df_put_bk['delta'] >= -0.2]
+    df_call = df_call_bk[df_call_bk['delta'] <= 0.2]
+
+    if not df_put.empty and not df_call.empty and not np.isnan(df_put['bid']) and not np.isnan(df_call['bid']):
+        pmin = df_put['delta'].values.argmin()
+        cmax = df_call['delta'].values.argmin()
+
+        df_put =  df_put.drop(df_put.iloc[pmin]['strike'])
+        df_call = df_call.drop(df_call.iloc[cmax]['strike'])
+        pmin = df_put['delta'].values.argmin()
+        cmax = df_call['delta'].values.argmin()
+        df_put = df_put.iloc[pmin]
+        df_call = df_call.iloc[cmax]
+
+        # if df_put['bid'] + df_call['bid'] >= 0.008:
+        p_data = [price, df_put['instrument_name'], df_put['strike'], df_put['bid'], df_put['delta'], df_put['gamma'], df_put['vega'], df_put['rho']]
+        c_data = [df_call['instrument_name'], df_call['strike'], df_call['bid'], df_call['delta'], df_call['gamma'], df_call['vega'], df_call['rho']]
+
+        data.append(p_data + c_data + ['2nd Max Delta Strategy'])
+
+    return data
+
+def delta_2nd_max_partial(put_options, call_options, price):
+    pass
 
 def collar_strategy(put_options, call_options, price):
     styk_interval = 500
