@@ -233,7 +233,7 @@ class Deribit_Exchange:
     
     async def order_mgmt_func(self, ws):
 
-        for order in self.orders:
+        for order in self.orders.copy():
             if (order['option_type'] == 'put' and self.asset_price <= order['strike']) or 
                (order['option_type'] == 'call' and self.asset_price >= order['strike']):
 
