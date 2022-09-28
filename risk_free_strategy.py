@@ -87,7 +87,7 @@ def selling_premiums_bk(put_options, call_options, price):
             df_call = df_call.iloc[cmax]
 
             # if df_put['bid'] + df_call['bid'] >= 0.008:
-            if not np.isnan(df_put['bid']) and not np.isnan(df_call['bid'])
+            if not np.isnan(df_put['bid']) and not np.isnan(df_call['bid']):
                 p_data = [price, df_put['instrument_name'], df_put['strike'], df_put['bid'], df_put['delta'], df_put['gamma'], df_put['vega'], df_put['rho']]
                 c_data = [df_call['instrument_name'], df_call['strike'], df_call['bid'], df_call['delta'], df_call['gamma'], df_call['vega'], df_call['rho']]
 
