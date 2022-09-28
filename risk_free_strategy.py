@@ -110,6 +110,8 @@ def selling_premiums(put_options, call_options, price):
         if res:
             data.append(res)
 
+    return np.array(data, dtype=str)
+
 def dist_1500(put_options, call_options, price):
     data = []
 
