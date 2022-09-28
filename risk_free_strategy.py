@@ -8,7 +8,7 @@ df_initcols = ['strike', 'instrument_name', 'option_type', 'settlement_period']
 
 # def filter_option()
 
-def selling_premiums_bk(put_options, call_options, price):
+def selling_premiums(put_options, call_options, price):
     data = []
 
     # 1500 distance
@@ -95,7 +95,7 @@ def selling_premiums_bk(put_options, call_options, price):
 
     return np.array(data, dtype=str)
 
-def selling_premiums(put_options, call_options, price):
+def selling_premiums_todo(put_options, call_options, price):
     data = []
 
     res = dist_1500(put_options, call_options, price)
