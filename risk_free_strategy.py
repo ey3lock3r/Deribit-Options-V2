@@ -193,7 +193,7 @@ def delta_2nd_max(put_options, call_options, price):
     df_put = df_put_bk[df_put_bk['delta'] >= -0.2]
     df_call = df_call_bk[df_call_bk['delta'] <= 0.2]
 
-    if not df_put.empty and not df_call.empty and not np.isnan(df_put['bid']) and not np.isnan(df_call['bid']):
+    if not df_put.empty and not df_call.empty:
         pmin = df_put['delta'].values.argmin()
         cmax = df_call['delta'].values.argmin()
 
@@ -205,10 +205,11 @@ def delta_2nd_max(put_options, call_options, price):
         df_call = df_call.iloc[cmax]
 
         # if df_put['bid'] + df_call['bid'] >= 0.008:
-        p_data = [price, df_put['instrument_name'], df_put['strike'], df_put['bid'], df_put['delta'], df_put['gamma'], df_put['vega'], df_put['rho']]
-        c_data = [df_call['instrument_name'], df_call['strike'], df_call['bid'], df_call['delta'], df_call['gamma'], df_call['vega'], df_call['rho']]
+        if not np.isnan(df_put['bid']) and not np.isnan(df_call['bid']):
+            p_data = [price, df_put['instrument_name'], df_put['strike'], df_put['bid'], df_put['delta'], df_put['gamma'], df_put['vega'], df_put['rho']]
+            c_data = [df_call['instrument_name'], df_call['strike'], df_call['bid'], df_call['delta'], df_call['gamma'], df_call['vega'], df_call['rho']]
 
-        data.append(p_data + c_data + ['2nd Max Delta Strategy'])
+            data.append(p_data + c_data + ['2nd Max Delta Strategy'])
 
     return data
 
