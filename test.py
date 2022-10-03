@@ -29,4 +29,35 @@ import pandas as pd
 # expire_dt = expire_dt.strftime(f"{expire_dt.day}%b%y").upper()
 # print(f'Today is {expire_dt}')
 
-print(np.ceil)
+import asyncio
+import time
+
+updated = {
+    'flag': False
+}
+
+async def count():
+    for i in range(100):
+        if i == 50: updated['flag'] = True
+        print(f'count: {i}')
+
+
+async def check():
+    while not updated['flag']:
+        pass
+
+    print('check completed')
+
+async def start():
+    print('start')
+    await check()
+    print('end')
+
+async def main():
+    await asyncio.gather(start(), count())
+
+
+s = time.perf_counter()
+asyncio.run(main())
+elapsed = time.perf_counter() - s
+print(f"{__file__} executed in {elapsed:0.2f} seconds.")

@@ -65,6 +65,7 @@ class Deribit_Exchange:
         self.asset_price = 0
         self.put_options = {}
         self.call_options = {}
+        self.equity = None
         
     def create_message(self, method: str, params: dict = {},
                         mess_id: Union[int, str, None] = None,
@@ -142,7 +143,7 @@ class Deribit_Exchange:
         return self.get_response_result(await ws.recv())
 
     async def create_order(self, ws, instrument_name: str, price: float, amount: float,
-                            direction: str = 'sell',
+                            direction: str = 'sell', label: str = '',
                             raise_error: bool = True):
 
         await ws.send(
@@ -151,7 +152,8 @@ class Deribit_Exchange:
                 { 'instrument_name' : instrument_name,
                   'amount' : amount,
                   'type' : 'limit',
-                  'price' : price }
+                  'price' : price,
+                  'label' : label }
             )
         )
 
@@ -196,6 +198,43 @@ class Deribit_Exchange:
 
         return self.get_response_result(await ws.recv(), raise_error = raise_error)
 
+    async def get_user_trades_by_currency(self, ws, currency: str = 'BTC', kind: str = 'option',
+                                    raise_error: bool = True):
+
+        await ws.send(
+            self.create_message(
+                f'private/get_user_trades_by_currency',
+                { 'currency': currency,
+                  'kind': kind }
+            )
+        )
+
+        return self.get_response_result(await ws.recv(), raise_error = raise_error)
+
+    async def get_positions(self, ws, currency: str = 'BTC', kind: str = 'option',
+                                    raise_error: bool = True):
+
+        await ws.send(
+            self.create_message(
+                f'private/get_positions',
+                { 'currency': currency,
+                  'kind': kind }
+            )
+        )
+
+        return self.get_response_result(await ws.recv(), raise_error = raise_error)
+
+    async def get_account_summary(self, ws, currency: str = 'BTC',
+                                    raise_error: bool = True):
+
+        await ws.send(
+            self.create_message(
+                f'private/get_account_summary',
+                { 'currency': currency }
+            )
+        )
+
+        return self.get_response_result(await ws.recv(), raise_error = raise_error)
 
     async def close_position(self, ws, instrument_name: str, price: float, 
                                 ordtype: str = 'limit',
@@ -225,32 +264,69 @@ class Deribit_Exchange:
 
         return self.get_response_result(await ws.recv())
 
-    async def post_orders(self, ws, order_list: dict = {}):
+    async def post_orders(self, order_list: list = []):
 
-        for order in order_list:
-            order_res = await self.create_order(
-                instrument_name=order['instrument_name'],
-                price=order['bid'],
-                amount=order['amount']
-            )
-            if 'order' in order_res['order']:
-                info = { 'option_type': order['option_type'], 'stike': order['stike'] }
+        async with websockets.connect(self.url) as websocket:
+            
+            await self.auth(websocket)
+            
+            for order in order_list:
+                order_res = await self.create_order(
+                    websocket,
+                    instrument_name = order['instrument']['instrument_name'],
+                    price = order['bid'],
+                    amount = order['amount'],
+                    label = order['label']  # put/call, strike
+                )
+                if 'order' in order_res['order']:
+                    order_det = order_res['order']
+                    self.orders[order_det['order_id']] = order['instrument']
 
-                order_det = order_res['order']
-                order_det.update(info)
-                self.orders[order_det['order_id']] = order_det  # todo modify to select only some attrs ?
+                else:
+                    self.logger.info('Error in post_orders: Order not in order_res!')
+
+            # update equity
+            res = await self.get_account_summary(websocket, currency=self.currency)
+            self.equity = float(res['equity'])
     
-    async def order_mgmt_func(self, ws):
+    async def order_mgmt_func(self):
+        instrument = {}
 
-        for order in self.orders.copy():
-            if (order['option_type'] == 'put' and self.asset_price <= order['strike']) or \
-               (order['option_type'] == 'call' and self.asset_price >= order['strike']):
+        async with websockets.connect(self.url) as websocket:
+            
+            await self.auth(websocket)
 
-                price = order['ask']
-                
-                order_res = await self.close_position(ws, order['instrument_name'], price)
-                order = order_res['order']
-                self.orders.pop(order['order_id'], None)
+            # initialize equity
+            res = await self.get_account_summary(websocket, currency=self.currency)
+            self.equity = float(res['equity'])
+
+            orders = await self.get_positions(websocket, currency=self.currency)
+
+            for order in orders:
+                _, _, strike, order_type  = order['label'].split('-')
+
+                if order_type == 'P':
+                    instrument = self.put_options[float(strike)]
+                else:
+                    instrument = self.call_options[float(strike)]
+
+                self.orders[order['order_id']] = instrument
+
+            while self.keep_alive:
+                if websocket.open:
+
+                    for id, order in self.orders.copy().items():
+
+                        if (order['option_type'] == 'put' and self.asset_price <= order['strike']) or \
+                           (order['option_type'] == 'call' and self.asset_price >= order['strike']):
+                            
+                            await self.close_position(websocket, order['instrument_name'], order['ask'])
+                            self.orders.pop(id, None)
+                            asyncio.sleep(0.5)
+                        
+                else:
+                    self.logger.info(f'Reconnecting order_mgmt_func...')
+                    await self.auth(websocket)
 
                 asyncio.sleep(0.5)
 
@@ -283,7 +359,7 @@ class Deribit_Exchange:
 
                         self.logger.debug(f'Price index: {data}')
 
-                        await self.order_mgmt_func(websocket)
+                        # await self.order_mgmt_func(websocket)
                 
                 else:
                     self.logger.info(f'Reconnecting Price listener...')

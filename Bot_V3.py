@@ -115,6 +115,7 @@ class CBot:
         tasks.append(asyncio.to_thread(self.check_riskfree_trade))
         tasks.append(asyncio.create_task(self.end_of_day()))
         tasks.append(asyncio.create_task(self.exchange.fetch_deribit_price_index()))
+        tasks.append(asyncio.create_task(self.exchange.order_mgmt_func(self.interval)))
         self.exchange.call_options, self.exchange.put_options = await self.exchange.prepare_option_struct()
 
         # if not self.exchange.call_options or not self.exchange.put_options:
