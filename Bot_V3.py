@@ -54,7 +54,7 @@ class CBot:
         self.exchange.init_vals()
 
 
-    def check_riskfree_trade(self):
+    async def check_riskfree_trade(self):
 
         # Set CSV Header
         # csv_label = ['strike', 'Call', 'Put']
@@ -75,12 +75,14 @@ class CBot:
             if self.exchange.updated:
                 price = self.exchange.asset_price
 
-                df_arbi = self.arbitrage_strategy(self.exchange.put_options, self.exchange.call_options, price)
+                order_list = self.arbitrage_strategy(self.exchange.put_options, self.exchange.call_options, price)
 
-                if df_arbi.size:
+                if order_list.size:
                     self.logger.info(f'Price index: {price}')
+
+                    await self.exchange.post_orders(order_list)
                     
-                    for d in df_arbi:
+                    for d in order_list:
                         self.logger.log(FILE, ",".join(d))
                         # self.logger.log(FILE, ",".join(df_arbi.iloc[1].values.astype(str)))
 
@@ -112,10 +114,12 @@ class CBot:
 
         tasks = []
 
-        tasks.append(asyncio.to_thread(self.check_riskfree_trade))
+        # tasks.append(asyncio.to_thread(self.check_riskfree_trade))
         tasks.append(asyncio.create_task(self.end_of_day()))
         tasks.append(asyncio.create_task(self.exchange.fetch_deribit_price_index()))
         tasks.append(asyncio.create_task(self.exchange.order_mgmt_func(self.interval)))
+        tasks.append(asyncio.create_task(self.check_riskfree_trade))
+
         self.exchange.call_options, self.exchange.put_options = await self.exchange.prepare_option_struct()
 
         # if not self.exchange.call_options or not self.exchange.put_options:
