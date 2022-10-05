@@ -8,7 +8,7 @@ df_initcols = ['strike', 'instrument_name', 'option_type', 'settlement_period']
 
 # def filter_option()
 
-def selling_premiums(put_options, call_options, price):
+def selling_premiums_bk(put_options, call_options, price):
     data = []
 
     # 1500 distance
@@ -77,12 +77,12 @@ def selling_premiums(put_options, call_options, price):
 
         if not df_put.empty and not df_call.empty:
             pmin = df_put['delta'].values.argmin()
-            cmax = df_call['delta'].values.argmin()
+            cmax = df_call['delta'].values.argmax()
 
             df_put =  df_put.drop(df_put.iloc[pmin]['strike'])
             df_call = df_call.drop(df_call.iloc[cmax]['strike'])
             pmin = df_put['delta'].values.argmin()
-            cmax = df_call['delta'].values.argmin()
+            cmax = df_call['delta'].values.argmax()
             df_put = df_put.iloc[pmin]
             df_call = df_call.iloc[cmax]
 
@@ -95,25 +95,7 @@ def selling_premiums(put_options, call_options, price):
 
     return np.array(data, dtype=str)
 
-def selling_premiums_todo(put_options, call_options, price):
-    data = []
-
-    res = dist_1500(put_options, call_options, price)
-    if res:
-        data.append(res)
-
-    res = delta_10_20(put_options, call_options, price)
-    if res:
-        data.append(res)
-    
-        res = delta_2nd_max(put_options, call_options, price)
-        if res:
-            data.append(res)
-
-    return np.array(data, dtype=str)
-
-def dist_1500(put_options, call_options, price):
-    data = []
+def dist_1500(data, put_options, call_options, price):
 
     # 1500 distance
     l_price = price - price % 500
@@ -155,8 +137,9 @@ def dist_1500(put_options, call_options, price):
 
     return data
 
-def delta_10_20(put_options, call_options, price):
-    data = []
+def delta_10_20(data, put_options, call_options, price):
+
+    activated = False
     # create put/call dataframes and check if empty
     df_put_bk = pd.DataFrame(put_options.values())
     df_put_bk.set_index('strike', inplace=True, drop=False)
@@ -178,11 +161,11 @@ def delta_10_20(put_options, call_options, price):
         c_data = [df_call['instrument_name'], df_call['strike'], df_call['bid'], df_call['delta'], df_call['gamma'], df_call['vega'], df_call['rho']]
 
         data.append(p_data + c_data + ['10-20% Delta Strategy'])
+        activated = True
 
-    return data
+    return activated, data
 
-def delta_2nd_max(put_options, call_options, price):
-    data = []
+def delta_2nd_max(data, put_options, call_options, price):
 
     df_put_bk = pd.DataFrame(put_options.values())
     df_put_bk.set_index('strike', inplace=True, drop=False)
@@ -195,12 +178,15 @@ def delta_2nd_max(put_options, call_options, price):
 
     if not df_put.empty and not df_call.empty:
         pmin = df_put['delta'].values.argmin()
-        cmax = df_call['delta'].values.argmin()
+        cmax = df_call['delta'].values.argmax()
 
-        df_put =  df_put.drop(df_put.iloc[pmin]['strike'])
-        df_call = df_call.drop(df_call.iloc[cmax]['strike'])
-        pmin = df_put['delta'].values.argmin()
-        cmax = df_call['delta'].values.argmin()
+        if df_put.iloc[pmin]['bid'] > df_call.iloc[cmax]['bid']:
+            df_put =  df_put.drop(df_put.iloc[pmin]['strike'])
+            pmin = df_put['delta'].values.argmin()
+        else:
+            df_call = df_call.drop(df_call.iloc[cmax]['strike'])
+            cmax = df_call['delta'].values.argmax()
+
         df_put = df_put.iloc[pmin]
         df_call = df_call.iloc[cmax]
 
@@ -213,8 +199,19 @@ def delta_2nd_max(put_options, call_options, price):
 
     return data
 
-def delta_2nd_max_partial(put_options, call_options, price):
+def delta_2nd_max_partial(data, put_options, call_options, price):
     pass
+
+def selling_premiums(put_options, call_options, price):
+    data = []
+
+    data = dist_1500(data, put_options, call_options, price)
+    active, data = delta_10_20(data, put_options, call_options, price)
+    
+    if active:
+        data = delta_2nd_max(data, put_options, call_options, price)
+
+    return np.array(data, dtype=str)
 
 def collar_strategy(put_options, call_options, price):
     styk_interval = 500

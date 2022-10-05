@@ -7,6 +7,7 @@ exchange:
     prod: wss://www.deribit.com/ws/api/v2
 
   env: 'prod'
+  trading: false
 
   auth:
     test:

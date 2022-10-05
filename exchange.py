@@ -17,12 +17,14 @@ class Deribit_Exchange:
     Launch via the run method or asynchronously via start.
     The business logic of the bot itself is described in the worker method."""
 
-    def __init__(self, url, auth: dict, currency: str = 'ETH', env: str = 'test',
+    def __init__(self, url, auth: dict, currency: str = 'ETH', env: str = 'test', trading: bool = False,
                 logger: Union[logging.Logger, str, None] = None):
 
         self.currency = currency
         self.url = url[env]
         self.__credentials = auth[env]
+        self.env = env
+        self.trading = trading
         self.logger = (logging.getLogger(logger) if isinstance(logger,str) else logger)
 
         if self.logger is None:
@@ -266,30 +268,76 @@ class Deribit_Exchange:
 
     async def post_orders(self, order_list: list = []):
 
-        async with websockets.connect(self.url) as websocket:
-            
-            await self.auth(websocket)
-            
-            for order in order_list:
-                order_res = await self.create_order(
-                    websocket,
-                    instrument_name = order['instrument']['instrument_name'],
-                    price = order['bid'],
-                    amount = order['amount'],
-                    label = order['label']  # put/call, strike
-                )
-                if 'order' in order_res['order']:
-                    order_det = order_res['order']
-                    self.orders[order_det['order_id']] = order['instrument']
+        if not self.trading: return
 
-                else:
-                    self.logger.info('Error in post_orders: Order not in order_res!')
+        if order_list:
+            async with websockets.connect(self.url) as websocket:
+                
+                await self.auth(websocket)
+                
+                for order in order_list:
+                    order_res = await self.create_order(
+                        websocket,
+                        instrument_name = order['instrument']['instrument_name'],
+                        price = order['bid'],
+                        amount = order['amount'],
+                        label = order['label']  # put/call, strike
+                    )
+                    if 'order' in order_res['order']:
+                        order_det = order_res['order']
+                        self.orders[order_det['order_id']] = order['instrument']
+                        asyncio.sleep(0.5)
 
-            # update equity
-            res = await self.get_account_summary(websocket, currency=self.currency)
-            self.equity = float(res['equity'])
+                    else:
+                        self.logger.info('Error in post_orders: Order not in order_res!')
+
+                # update equity
+                res = await self.get_account_summary(websocket, currency=self.currency)
+                self.equity = float(res['equity'])
     
-    async def order_mgmt_func(self):
+    async def close_losing_positions(self):
+
+        if self.orders:
+            async with websockets.connect(self.url) as websocket:
+                
+                await self.auth(websocket)
+
+                for id, order in self.orders.copy().items():
+
+                    if (order['option_type'] == 'put' and self.asset_price <= order['strike']) or \
+                        (order['option_type'] == 'call' and self.asset_price >= order['strike']):
+                        
+                        await self.close_position(websocket, order['instrument_name'], order['ask'])
+                        self.orders.pop(id, None)
+                        asyncio.sleep(0.5)
+
+    async def fetch_account_equity(self, ws):
+
+        if not self.trading: return
+
+        res = await self.get_account_summary(ws, currency=self.currency)
+        self.equity = float(res['equity'])
+
+    async def fetch_account_positions(self, ws):
+
+        if not self.trading: return
+
+        orders = await self.get_positions(ws, currency=self.currency)
+
+        for order in orders:
+            _, _, strike, order_type  = order['label'].split('-')
+
+            if order_type == 'P':
+                instrument = self.put_options[float(strike)]
+            else:
+                instrument = self.call_options[float(strike)]
+
+            self.orders[order['order_id']] = instrument
+
+    async def order_mgmt_func_bk(self):
+
+        # if self.env == 'test': return
+
         instrument = {}
 
         async with websockets.connect(self.url) as websocket:
@@ -337,6 +385,11 @@ class Deribit_Exchange:
 
             await self.auth(websocket)
 
+            await asyncio.gather(
+                self.fetch_account_equity(websocket),
+                self.fetch_account_positions(websocket)
+            )
+
             await websocket.send(
                 self.create_message(
                     'private/subscribe',
@@ -359,7 +412,7 @@ class Deribit_Exchange:
 
                         self.logger.debug(f'Price index: {data}')
 
-                        # await self.order_mgmt_func(websocket)
+                        await self.close_losing_positions()
                 
                 else:
                     self.logger.info(f'Reconnecting Price listener...')

@@ -90,7 +90,8 @@ class CBot:
                         # self.logger.log(FILE, ",".join(df_arbi.iloc[min].values.astype(str)))
 
                 self.exchange.updated = False
-                time.sleep(self.interval)
+                self.count_to_reset = 0
+                asyncio.sleep(self.interval)
             
             else:
                 self.logger.info('Prices not updated')
@@ -101,7 +102,7 @@ class CBot:
                     self.logger.info('Resetting connection... ')
                     raise CBotError('Count_to_reset reached!')
 
-                time.sleep(self.interval * 0.3)
+                asyncio.sleep(self.interval * 0.3)
 
         self.logger.info('check_riskfree_trade ended!')
 
@@ -117,7 +118,7 @@ class CBot:
         # tasks.append(asyncio.to_thread(self.check_riskfree_trade))
         tasks.append(asyncio.create_task(self.end_of_day()))
         tasks.append(asyncio.create_task(self.exchange.fetch_deribit_price_index()))
-        tasks.append(asyncio.create_task(self.exchange.order_mgmt_func(self.interval)))
+        # tasks.append(asyncio.create_task(self.exchange.order_mgmt_func(self.interval)))
         tasks.append(asyncio.create_task(self.check_riskfree_trade))
 
         self.exchange.call_options, self.exchange.put_options = await self.exchange.prepare_option_struct()
