@@ -286,7 +286,7 @@ class Deribit_Exchange:
                     if 'order' in order_res['order']:
                         order_det = order_res['order']
                         self.orders[order_det['order_id']] = order['instrument']
-                        asyncio.sleep(0.5)
+                        await asyncio.sleep(0.5)
 
                     else:
                         self.logger.info('Error in post_orders: Order not in order_res!')
@@ -309,7 +309,7 @@ class Deribit_Exchange:
                         
                         await self.close_position(websocket, order['instrument_name'], order['ask'])
                         self.orders.pop(id, None)
-                        asyncio.sleep(0.5)
+                        await asyncio.sleep(0.5)
 
     async def fetch_account_equity(self, ws):
 
@@ -370,13 +370,13 @@ class Deribit_Exchange:
                             
                             await self.close_position(websocket, order['instrument_name'], order['ask'])
                             self.orders.pop(id, None)
-                            asyncio.sleep(0.5)
+                            await asyncio.sleep(0.5)
                         
                 else:
                     self.logger.info(f'Reconnecting order_mgmt_func...')
                     await self.auth(websocket)
 
-                asyncio.sleep(0.5)
+                await asyncio.sleep(0.5)
 
     async def fetch_deribit_price_index(self) -> NoReturn:
         """Реализует логику работы бота"""
