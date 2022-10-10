@@ -43,7 +43,7 @@ class CBot:
     def init_vals(self):
         self.stop = False
         self.count_to_reset = 0
-        self.tasks = []
+        # self.tasks = []
 
         # if not first run, rename logfile
         # logfile = date.today().strftime('%y-%m-%d_%H_%M') + '_bot_log.csv'
@@ -129,27 +129,31 @@ class CBot:
         # def update_options_dict(options_dict, strike: str, new_data) -> NoReturn:
         #     options_dict[strike].update(new_data)
 
+        delay = 0.5
         for key, val in self.exchange.call_options.items():
             tasks.append(
                 asyncio.create_task(
-                    self.exchange.fetch_orderbook_data(key, val['instrument_name'], self.exchange.call_options)
+                    self.exchange.fetch_orderbook_data(key, val['instrument_name'], self.exchange.call_options, delay=delay)
                 )
             )
+            delay += 0.5
         
         for key, val in self.exchange.put_options.items():
             tasks.append(
                 asyncio.create_task(
-                    self.exchange.fetch_orderbook_data(key, val['instrument_name'], self.exchange.put_options)
+                    self.exchange.fetch_orderbook_data(key, val['instrument_name'], self.exchange.put_options, delay=delay)
                 )
             )
+            delay += 0.5
 
         self.logger.info(f'Number of tasks: {len(tasks)}')
-        self.tasks = tasks
+        await asyncio.gather(*tasks)
+        # self.tasks = tasks
 
-        for task in tasks:
+        # for task in tasks:
             # await asyncio.gather(task)
-            await task
-            time.sleep(0.5)
+            # await task
+            # time.sleep(0.5)
 
         self.logger.info(f'Tasks created: {len(tasks)}')
         self.logger.info('start > end !')

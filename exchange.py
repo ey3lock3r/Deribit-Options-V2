@@ -427,9 +427,11 @@ class Deribit_Exchange:
 
         self.logger.info('fetch_deribit_price_index listener ended..')
 
-    async def fetch_orderbook_data(self, strike: str, instrument_name: str, options_dict: dict) -> NoReturn:
+    async def fetch_orderbook_data(self, strike: str, instrument_name: str, options_dict: dict,
+                                    delay: float = 0) -> NoReturn:
         """Реализует логику работы бота"""
-
+        await asyncio.sleep(delay)
+        
         self.logger.info(f'fetch_orderbook_data: Listener for {instrument_name} started..')
 
         async with websockets.connect(self.url) as websocket:
