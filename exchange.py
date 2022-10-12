@@ -68,6 +68,7 @@ class Deribit_Exchange:
         self.put_options = {}
         self.call_options = {}
         self.equity = None
+        self.init_price = None
         
     def create_message(self, method: str, params: dict = {},
                         mess_id: Union[int, str, None] = None,
@@ -413,6 +414,10 @@ class Deribit_Exchange:
                         self.logger.debug(f'Price index: {data}')
 
                         await self.close_losing_positions()
+
+                        if self.asset_price >= self.init_price + 2000 or self.asset_price <= self.init_price - 2000:
+                            self.logger.info('Resetting bot... ')
+                            raise CBotError('Price moved +-2000!')
                 
                 else:
                     self.logger.info(f'Reconnecting Price listener...')
@@ -492,6 +497,8 @@ class Deribit_Exchange:
             self.logger.info(f'fetch_orderbook_data: Listener for {instrument_name} ended..')
 
     async def prepare_option_struct(self) -> NoReturn:
+        self.init_price = self.asset_price
+
         self.logger.info('prepare_option_struct')
         DAY = timedelta(2)          # 2 days+ option expiry
         expire_dt = date.today() + DAY
@@ -522,13 +529,18 @@ class Deribit_Exchange:
                 self.logger.info('Price not updated!')
                 await asyncio.sleep(0.5)
             
-            styk_interval = 500
+            styk_interval = 250
             bounds = 5000
             price = self.asset_price
             price -= price % styk_interval
 
-            pd_inst = pd_inst[(pd_inst['date'] == expire_dt) & (pd_inst['strike'] >= price - bounds) & (pd_inst['strike'] <= price + bounds)]
+            # pd_inst = pd_inst[(pd_inst['date'] == expire_dt) & (pd_inst['strike'] >= price - bounds) & (pd_inst['strike'] <= price + bounds)]
             # pd_inst = pd_inst[(pd_inst['settlement_period'] != 'month') & (pd_inst['settlement_period'] != 'week')]
+            pd_inst = pd_inst[(pd_inst['date'] == expire_dt) \
+                & (
+                    ((pd_inst['option_type'] == 'call') & (pd_inst['strike'] >= price - 2000) & (pd_inst['strike'] <= price + bounds)) \
+                    | ((pd_inst['option_type'] == 'put') & (pd_inst['strike'] >= price - bounds) & (pd_inst['strike'] <= price + 2000))
+                )]
             pd_inst.sort_index(inplace=True)
 
             if pd_inst.empty:
