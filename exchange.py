@@ -145,6 +145,22 @@ class Deribit_Exchange:
 
         return self.get_response_result(await ws.recv())
 
+    async def get_index_price(self, ws) -> Optional[dict]:
+        self.logger.info('get_index_price')
+
+        prop = { 'index_name': f'{self.currency.lower()}_usd' }
+
+        await ws.send(
+            self.create_message(
+                'public/get_index_price',
+                { 'index_name': f'{self.currency.lower()}_usd' }
+            )
+        )
+
+        price = self.get_response_result(await ws.recv())
+        if 'index_price' in price:
+            self.init_price = price['index_price']
+
     async def create_order(self, ws, instrument_name: str, price: float, amount: float,
                             direction: str = 'sell', label: str = '',
                             raise_error: bool = True):
@@ -389,6 +405,7 @@ class Deribit_Exchange:
             await asyncio.gather(
                 self.fetch_account_equity(websocket),
                 self.fetch_account_positions(websocket)
+                self.get_index_price(websocket)
             )
 
             await websocket.send(
@@ -497,7 +514,6 @@ class Deribit_Exchange:
             self.logger.info(f'fetch_orderbook_data: Listener for {instrument_name} ended..')
 
     async def prepare_option_struct(self) -> NoReturn:
-        self.init_price = self.asset_price
 
         self.logger.info('prepare_option_struct')
         DAY = timedelta(2)          # 2 days+ option expiry
