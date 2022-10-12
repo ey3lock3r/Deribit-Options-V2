@@ -404,7 +404,7 @@ class Deribit_Exchange:
 
             await asyncio.gather(
                 self.fetch_account_equity(websocket),
-                self.fetch_account_positions(websocket)
+                self.fetch_account_positions(websocket),
                 self.get_index_price(websocket)
             )
 
