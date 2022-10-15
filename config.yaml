@@ -13,8 +13,6 @@ bot:
       client_secret: 'fyUfohnmLn9G0vlnPVOMsDFBIWTdsacl7hDF-pzRWl8'
     prod:
       grant_type: 'client_credentials'
-      client_id: 'XdxdL4lU'
-      client_secret: 'nuPcnvUaqpDIK0Q-_nYTpglTADn9Ffjn58FnPj6-OUM'
 
   currency: 'BTC'
 
