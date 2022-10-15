@@ -289,45 +289,67 @@ class Deribit_Exchange:
         if not self.trading: return
 
         if order_list:
-            async with websockets.connect(self.url) as websocket:
+            websocket = await websockets.connect(self.url)
                 
-                await self.auth(websocket)
-                
-                for order in order_list:
-                    order_res = await self.create_order(
-                        websocket,
-                        instrument_name = order['instrument']['instrument_name'],
-                        price = order['bid'],
-                        amount = order['amount'],
-                        label = order['label']  # put/call, strike
-                    )
-                    if 'order' in order_res['order']:
-                        order_det = order_res['order']
-                        self.orders[order_det['order_id']] = order['instrument']
-                        await asyncio.sleep(0.5)
+            await self.auth(websocket)
+            
+            while True:
+                try:
+                    for idx, order in enumerate(order_list.copy()):
+                        order_res = await self.create_order(
+                            websocket,
+                            instrument_name = order['instrument']['instrument_name'],
+                            price = order['bid'],
+                            amount = order['amount'],
+                            label = order['label']  # put/call, strike
+                        )
+                        if 'order' in order_res['order']:
+                            order_det = order_res['order']
+                            self.orders[order_det['order_id']] = order['instrument']
+                            order_list.pop(idx)
+                            await asyncio.sleep(0.5)
 
-                    else:
-                        self.logger.info('Error in post_orders: Order not in order_res!')
+                        else:
+                            self.logger.info('Error in post_orders: Order not in order_res!')
 
-                # update equity
-                res = await self.get_account_summary(websocket, currency=self.currency)
-                self.equity = float(res['equity'])
+                    # update equity
+                    res = await self.get_account_summary(websocket, currency=self.currency)
+                    self.equity = float(res['equity'])
+                    break
+
+                except Exception as E:
+                    self.logger.info(f'Error in post_orders: {E}')
+                    self.logger.info(f'Reconnecting post_orders...')
+                    websocket = await websockets.connect(self.url)
+                    await self.auth(websocket)
+                    await asyncio.sleep(0.5)
     
     async def close_losing_positions(self):
 
         if self.orders:
-            async with websockets.connect(self.url) as websocket:
+            websocket = await websockets.connect(self.url)
                 
-                await self.auth(websocket)
+            await self.auth(websocket)
 
-                for id, order in self.orders.copy().items():
+            while True:
+                try:
+                    for id, order in self.orders.copy().items():
 
-                    if (order['option_type'] == 'put' and self.asset_price <= order['strike']) or \
-                        (order['option_type'] == 'call' and self.asset_price >= order['strike']):
-                        
-                        await self.close_position(websocket, order['instrument_name'], order['ask'])
-                        self.orders.pop(id, None)
-                        await asyncio.sleep(0.5)
+                        if (order['option_type'] == 'put' and self.asset_price <= order['strike']) or \
+                            (order['option_type'] == 'call' and self.asset_price >= order['strike']):
+                            
+                            await self.close_position(websocket, order['instrument_name'], order['ask'])
+                            self.orders.pop(id, None)
+                            await asyncio.sleep(0.5)
+                    
+                    break
+
+                except Exception as E:
+                    self.logger.info(f'Error in close_losing_positions: {E}')
+                    self.logger.info(f'Reconnecting close_losing_positions...')
+                    websocket = await websockets.connect(self.url)
+                    await self.auth(websocket)
+                    await asyncio.sleep(0.5)
 
     async def fetch_account_equity(self, ws):
 
@@ -354,99 +376,102 @@ class Deribit_Exchange:
 
     async def order_mgmt_func_bk(self):
 
-        # if self.env == 'test': return
+        if not self.trading: return
 
         instrument = {}
 
-        async with websockets.connect(self.url) as websocket:
+        websocket = await websockets.connect(self.url)
             
-            await self.auth(websocket)
+        await self.auth(websocket)
 
-            # initialize equity
-            res = await self.get_account_summary(websocket, currency=self.currency)
-            self.equity = float(res['equity'])
+        # initialize equity
+        res = await self.get_account_summary(websocket, currency=self.currency)
+        self.equity = float(res['equity'])
 
-            orders = await self.get_positions(websocket, currency=self.currency)
+        orders = await self.get_positions(websocket, currency=self.currency)
 
-            for order in orders:
-                _, _, strike, order_type  = order['label'].split('-')
+        for order in orders:
+            _, _, strike, order_type  = order['label'].split('-')
 
-                if order_type == 'P':
-                    instrument = self.put_options[float(strike)]
-                else:
-                    instrument = self.call_options[float(strike)]
+            if order_type == 'P':
+                instrument = self.put_options[float(strike)]
+            else:
+                instrument = self.call_options[float(strike)]
 
-                self.orders[order['order_id']] = instrument
+            self.orders[order['order_id']] = instrument
 
-            while self.keep_alive:
-                if websocket.open:
+        while self.keep_alive:
+            try:
 
-                    for id, order in self.orders.copy().items():
+                for id, order in self.orders.copy().items():
 
-                        if (order['option_type'] == 'put' and self.asset_price <= order['strike']) or \
-                           (order['option_type'] == 'call' and self.asset_price >= order['strike']):
-                            
-                            await self.close_position(websocket, order['instrument_name'], order['ask'])
-                            self.orders.pop(id, None)
-                            await asyncio.sleep(0.5)
+                    if (order['option_type'] == 'put' and self.asset_price <= order['strike']) or \
+                        (order['option_type'] == 'call' and self.asset_price >= order['strike']):
                         
-                else:
-                    self.logger.info(f'Reconnecting order_mgmt_func...')
-                    await self.auth(websocket)
+                        await self.close_position(websocket, order['instrument_name'], order['ask'])
+                        self.orders.pop(id, None)
+                        await asyncio.sleep(0.5)
+                    
+            except Exception as E:
+                self.logger.info(f'Error in order_mgmt_func: {E}')
+                self.logger.info(f'Reconnecting order_mgmt_func...')
+                websocket = await websockets.connect(self.url)
+                await self.auth(websocket)
 
-                await asyncio.sleep(0.5)
+            await asyncio.sleep(0.5)
 
     async def fetch_deribit_price_index(self) -> NoReturn:
         """Реализует логику работы бота"""
 
-        async with websockets.connect(self.url) as websocket:
+        websocket = await websockets.connect(self.url)
 
-            await self.auth(websocket)
-
-            await asyncio.gather(
-                self.fetch_account_equity(websocket),
-                self.fetch_account_positions(websocket),
-                self.get_index_price(websocket)
+        await self.auth(websocket)
+        await asyncio.gather(
+            self.fetch_account_equity(websocket),
+            self.fetch_account_positions(websocket),
+            self.get_index_price(websocket)
+        )
+        await websocket.send(
+            self.create_message(
+                'private/subscribe',
+                { "channels": [f'deribit_price_index.{self.currency.lower()}_usd'] }
             )
+        )
 
-            await websocket.send(
-                self.create_message(
-                    'private/subscribe',
-                    { "channels": [f'deribit_price_index.{self.currency.lower()}_usd'] }
-                )
-            )
+        data = None
+        while self.keep_alive:
 
-            while self.keep_alive:
-                if websocket.open:
-                    data = None
-                    message = self.get_response_result(await websocket.recv(), result_prop='params')
+            try:    
+                message = self.get_response_result(await websocket.recv(), result_prop='params')
 
-                    if (not message is None and
-                            ('channel' in message) and
-                            ('data' in message)):
+                if (not message is None and
+                        ('channel' in message) and
+                        ('data' in message)):
 
-                        data = message['data']
-                        self.asset_price = data['price']
-                        self.updated = True
+                    data = message['data']
+                    self.asset_price = data['price']
+                    self.updated = True
 
-                        self.logger.debug(f'Price index: {data}')
+                    self.logger.debug(f'Price index: {data}')
 
-                        await self.close_losing_positions()
+                    await self.close_losing_positions()
 
-                        if self.asset_price >= self.init_price + 2000 or self.asset_price <= self.init_price - 2000:
-                            self.logger.info('Resetting bot... ')
-                            raise CBotError('Price moved +-2000!')
-                
-                else:
-                    self.logger.info(f'Reconnecting Price listener...')
-                    await self.auth(websocket)
-                    await websocket.send(
-                        self.create_message(
-                            'private/subscribe',
-                            { "channels": [f'deribit_price_index.{self.currency.lower()}_usd'] }
-                        )
+                    if self.asset_price >= self.init_price + 2000 or self.asset_price <= self.init_price - 2000:
+                        self.logger.info('Resetting bot... ')
+                        raise CBotError('Price moved +-2000!')
+            
+            except Exception as E:
+                self.logger.info(f'Error in fetch_deribit_price_index: {E}')
+                self.logger.info(f'Reconnecting Price listener...')
+                websocket = await websockets.connect(self.url)
+                await self.auth(websocket)
+                await websocket.send(
+                    self.create_message(
+                        'private/subscribe',
+                        { "channels": [f'deribit_price_index.{self.currency.lower()}_usd'] }
                     )
-                    time.sleep(0.5)
+                )
+                await asyncio.sleep(0.5)
 
         self.logger.info('fetch_deribit_price_index listener ended..')
 
@@ -457,62 +482,63 @@ class Deribit_Exchange:
         
         self.logger.info(f'fetch_orderbook_data: Listener for {instrument_name} started..')
 
-        async with websockets.connect(self.url) as websocket:
+        websocket = await websockets.connect(self.url)
 
-            await self.auth(websocket)
-
-            await websocket.send(
-                self.create_message(
-                    'private/subscribe',
-                    # { "channels": [f'quote.{instrument_name}'] }
-                    { "channels": [f'ticker.{instrument_name}.raw'] }
-                )
+        await self.auth(websocket)
+        await websocket.send(
+            self.create_message(
+                'private/subscribe',
+                # { "channels": [f'quote.{instrument_name}'] }
+                { "channels": [f'ticker.{instrument_name}.raw'] }
             )
+        )
 
-            while self.keep_alive:
-                if websocket.open:
-                    data = None
-                    message = self.get_response_result(await websocket.recv(), result_prop='params')
+        data = None
+        while self.keep_alive:
 
-                    if (not message is None and
-                            ('channel' in message) and
-                            ('data' in message)):
+            try:
+                message = self.get_response_result(await websocket.recv(), result_prop='params')
 
-                        data = message['data']
-                        self.logger.debug(f'Option quotes: {data}')
+                if (not message is None and
+                        ('channel' in message) and
+                        ('data' in message)):
 
-                        new_data = {
-                            'bid': data['best_bid_price'] if data['best_bid_price'] > 0 else np.nan,
-                            'bid_amt': data['best_bid_amount'],
-                            'ask': data['best_ask_price'] if data['best_ask_price'] > 0 else np.nan,
-                            'ask_amt': data['best_ask_amount'],
-                            'delta': data['greeks']['delta'],
-                            'gamma': data['greeks']['gamma'],
-                            'vega': data['greeks']['vega'],
-                            'rho': data['greeks']['rho']
-                        }
+                    data = message['data']
+                    self.logger.debug(f'Option quotes: {data}')
 
-                        # func(options_dict, strike, new_data)
-                        options_dict[strike].update(new_data)
-                        self.updated = True
-                    
-                    else:
-                        self.logger.info('Data not updated > ')
-                        self.logger.info(f'Message: {message}')
+                    new_data = {
+                        'bid': data['best_bid_price'] if data['best_bid_price'] > 0 else np.nan,
+                        'bid_amt': data['best_bid_amount'],
+                        'ask': data['best_ask_price'] if data['best_ask_price'] > 0 else np.nan,
+                        'ask_amt': data['best_ask_amount'],
+                        'delta': data['greeks']['delta'],
+                        'gamma': data['greeks']['gamma'],
+                        'vega': data['greeks']['vega'],
+                        'rho': data['greeks']['rho']
+                    }
+
+                    # func(options_dict, strike, new_data)
+                    options_dict[strike].update(new_data)
+                    self.updated = True
                 
                 else:
-                    self.logger.info(f'Reconnecting listener for {instrument_name}')
-                    await self.auth(websocket)
-                    await websocket.send(
-                        self.create_message(
-                            'private/subscribe',
-                            # { "channels": [f'quote.{instrument_name}'] }
-                            { "channels": [f'ticker.{instrument_name}.raw'] }
-                        )
+                    self.logger.info('Data not updated > ')
+                    self.logger.info(f'Message: {message}')
+            
+            except Exception as E:
+                self.logger.info(f'Reconnecting listener for {instrument_name}')
+                websocket = await websockets.connect(self.url)
+                await self.auth(websocket)
+                await websocket.send(
+                    self.create_message(
+                        'private/subscribe',
+                        # { "channels": [f'quote.{instrument_name}'] }
+                        { "channels": [f'ticker.{instrument_name}.raw'] }
                     )
-                    time.sleep(0.5)
+                )
+                await asyncio.sleep(delay)
 
-            self.logger.info(f'fetch_orderbook_data: Listener for {instrument_name} ended..')
+        self.logger.info(f'fetch_orderbook_data: Listener for {instrument_name} ended..')
 
     async def prepare_option_struct(self) -> NoReturn:
 
@@ -522,7 +548,7 @@ class Deribit_Exchange:
         if datetime.now().hour <= 8:
             DAY = timedelta(1)          # 1 day option expiry
         else:
-            DAY = timedelta(2)          # 2 day+ option expiry
+            DAY = timedelta(2)          # 2 days option expiry
 
         expire_dt = date.today() + DAY
         self.logger.info(f'Today is {expire_dt}')
