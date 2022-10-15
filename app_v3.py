@@ -1,3 +1,8 @@
+# Loading an Environment Variable File with dotenv
+from dotenv import load_dotenv
+load_dotenv()
+import os
+
 from Bot_V3 import CBot, FILE
 from exchange import Deribit_Exchange
 # from arbitrage_strategy import check_riskfree_trade, check_riskfree_trade_v2
@@ -13,8 +18,9 @@ def main():
     with open('./config_v3.yaml','r') as f:
         config = yaml.load(f.read(), Loader = yaml.FullLoader)
 
-    # logfile = date.today().strftime('%y-%m-%d') + '_bot_log.csv'
-    # config['logging']['handlers']['file']['filename'] = logfile
+    if config['exchange']['env'] == 'prod':
+        config['exchange']['auth']['prod']['client_id'] = os.getenv('client_id')
+        config['exchange']['auth']['prod']['client_secret'] = os.getenv('client_secret')
     
     logging.addLevelName(FILE,"FILE")
     logging.config.dictConfig(config['logging'])

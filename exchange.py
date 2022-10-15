@@ -3,10 +3,11 @@ import asyncio
 import json
 import time
 import logging
+from tkinter.messagebox import NO
 import numpy as np
 import pandas as pd
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Union, Optional, NoReturn
 import websockets
 
@@ -516,7 +517,13 @@ class Deribit_Exchange:
     async def prepare_option_struct(self) -> NoReturn:
 
         self.logger.info('prepare_option_struct')
-        DAY = timedelta(2)          # 2 days+ option expiry
+        DAY = None
+
+        if datetime.now().hour <= 8:
+            DAY = timedelta(1)          # 1 day option expiry
+        else:
+            DAY = timedelta(2)          # 2 day+ option expiry
+
         expire_dt = date.today() + DAY
         self.logger.info(f'Today is {expire_dt}')
         expire_dt = expire_dt.strftime(f"{expire_dt.day}%b%y").upper()
