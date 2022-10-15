@@ -9,12 +9,12 @@ df_initcols = ['strike', 'instrument_name', 'option_type', 'settlement_period']
 def dist_1500(data, put_options, call_options, price):
 
     # 1500 distance
-    l_price = price - price % 500
-    h_price = l_price + 500
+    l_price = price - price % 250
+    h_price = l_price + 250
     l_strike = 0
     h_strike = 0
 
-    if price > l_price + 250:
+    if price > l_price + 125:
         l_strike = h_price - 1000.0
         h_strike = h_price + 1000.0
 
