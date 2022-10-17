@@ -288,6 +288,7 @@ class Deribit_Exchange:
     async def post_orders(self, order_list: list = []):
 
         if not self.trading: return
+        if self.equity <= 0: return
 
         if order_list:
             err_tresh = 0
