@@ -371,7 +371,8 @@ class Deribit_Exchange:
                         if (order['option_type'] == 'put' and self.asset_price <= order['strike']) or \
                             (order['option_type'] == 'call' and self.asset_price >= order['strike']):
                             
-                            await self.close_position(websocket, order['instrument_name'], order['ask'])
+                            res = await self.close_position(websocket, order['instrument_name'], order['ask'])
+                            self.logger.info(f'Closing position {order["instrument_name"]} with profit/loss: {res["order"]["profit_loss"]}')
                             self.orders.pop(id, None)
                             await asyncio.sleep(0.5)
                     
