@@ -17,7 +17,7 @@ class Deribit_Exchange:
     Launch via the run method or asynchronously via start.
     The business logic of the bot itself is described in the worker method."""
 
-    def __init__(self, url, auth: dict, currency: str = 'ETH', env: str = 'test', trading: bool = False, order_size: float = 0.1
+    def __init__(self, url, auth: dict, currency: str = 'ETH', env: str = 'test', trading: bool = False, order_size: float = 0.1,
                 logger: Union[logging.Logger, str, None] = None):
 
         self.currency = currency
