@@ -121,6 +121,37 @@ def selling_premiums(put_options, call_options, price):
 
     return np.array(data, dtype=str)
 
+def sell_008_premium_2k_dist(put_options, call_options, price):
+    data = []
+
+    # create put/call dataframes and check if empty
+    df_put_bk = pd.DataFrame(put_options.values())
+    df_put_bk.set_index('strike', inplace=True, drop=False)
+    df_put = df_put_bk[(df_put_bk['delta'] <= -0.1) & (df_put_bk['delta'] >= -0.2)]
+
+    df_call_bk = pd.DataFrame(call_options.values())
+    df_call_bk.set_index('strike', inplace=True, drop=False)
+    df_call = df_call_bk[(df_call_bk['delta'] >= 0.1) & (df_call_bk['delta'] <= 0.2)]
+
+    if not df_put.empty and not df_call.empty:
+        pmin = df_put['delta'].values.argmin()
+        cmax = df_call['delta'].values.argmax()
+
+        df_put = df_put.iloc[pmin]
+        df_call = df_call.iloc[cmax]
+
+        if df_put['bid'] + df_call['bid'] >= 0.008 and abs(df_call['strike'] - df_put['strike']) >= 2000:
+            data.append({
+                'instrument': put_options[float(df_put['strike'])],
+                'bid': df_put['bid']
+            })
+            data.append({
+                'instrument': call_options[float(df_call['strike'])],
+                'bid': df_call['bid']
+            })
+
+    return data
+
 def collar_strategy(put_options, call_options, price):
     styk_interval = 500
     prob = 0.5

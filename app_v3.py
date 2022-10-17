@@ -6,7 +6,7 @@ import os
 from Bot_V3 import CBot, FILE
 from exchange import Deribit_Exchange
 # from arbitrage_strategy import check_riskfree_trade, check_riskfree_trade_v2
-from risk_free_strategy import collar_strategy, selling_premiums
+from risk_free_strategy import collar_strategy, selling_premiums, sell_008_premium_2k_dist
 
 import yaml
 import logging.config
@@ -27,10 +27,13 @@ def main():
     
     # arbitrage_strat = check_riskfree_trade_v2
     # arbitrage_strat = collar_strategy
-    arbitrage_strat = selling_premiums
+    option_strats = {
+        'test': selling_premiums,
+        'trading': sell_008_premium_2k_dist
+    }
     
     deribit_exch = Deribit_Exchange(**config['exchange'])
-    bot = CBot(**config['bot'], exchange=deribit_exch, arbitrage_strategy=arbitrage_strat, money_mngmt=None)
+    bot = CBot(**config['bot'], exchange=deribit_exch, run_strategy=option_strats, money_mngmt=None)
     bot.run()
 
 

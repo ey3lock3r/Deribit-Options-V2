@@ -17,10 +17,11 @@ class Deribit_Exchange:
     Launch via the run method or asynchronously via start.
     The business logic of the bot itself is described in the worker method."""
 
-    def __init__(self, url, auth: dict, currency: str = 'ETH', env: str = 'test', trading: bool = False,
+    def __init__(self, url, auth: dict, currency: str = 'ETH', env: str = 'test', trading: bool = False, order_size: float = 0.1
                 logger: Union[logging.Logger, str, None] = None):
 
         self.currency = currency
+        self.order_size = order_size
         self.url = url[env]
         self.__credentials = auth[env]
         self.env = env
@@ -69,6 +70,7 @@ class Deribit_Exchange:
         self.call_options = {}
         self.equity = None
         self.init_price = None
+        self.dates_traded = {}
         
     def create_message(self, method: str, params: dict = {},
                         mess_id: Union[int, str, None] = None,
@@ -288,6 +290,23 @@ class Deribit_Exchange:
         if not self.trading: return
 
         if order_list:
+            err_tresh = 0
+            premiums = 0
+            tprems = 0
+
+            _, odate, _, _  = order_list[0]['instrument']['instrument_name'].split('-')
+            if odate in self.dates_traded:
+                return                      # trading done for the day
+
+            # if multiple trades
+            # currently not possible to distinguish positions per premium group during get positions
+            # for order in order_list:
+            #     tprems += float(order['bid'])
+
+            # if odate in self.dates_traded:
+            #     if tprems in self.dates_traded[odate]:
+            #         return
+
             websocket = await websockets.connect(self.url)
                 
             await self.auth(websocket)
@@ -299,13 +318,13 @@ class Deribit_Exchange:
                             websocket,
                             instrument_name = order['instrument']['instrument_name'],
                             price = order['bid'],
-                            amount = order['amount'],
-                            label = order['label']  # put/call, strike
+                            amount = self.order_size
                         )
-                        if 'order' in order_res['order']:
+                        if 'order' in order_res:
                             order_det = order_res['order']
-                            self.orders[order_det['order_id']] = order['instrument']
+                            self.orders[order_det['instrument_name']] = order['instrument']
                             order_list.pop(idx)
+                            premiums += float(order['bid'])
                             await asyncio.sleep(0.5)
 
                         else:
@@ -319,13 +338,26 @@ class Deribit_Exchange:
                 except Exception as E:
                     self.logger.info(f'Error in post_orders: {E}')
                     self.logger.info(f'Reconnecting post_orders...')
+                    err_tresh += 1
                     websocket = await websockets.connect(self.url)
                     await self.auth(websocket)
                     await asyncio.sleep(0.5)
+
+                    if err_tresh == 4:
+                        raise CBotError('Error treshold reached in post_orders!')
+
+            # if odate in self.dates_traded:
+                # currently not possible to distinguish positions per premium group during get positions
+                # if premiums not in self.dates_traded[odate]:  
+                # self.dates_traded[odate].add(premiums)
+            
+            # else:
+            self.dates_traded[odate] = { premiums }
     
     async def close_losing_positions(self):
 
         if self.orders:
+            err_tresh = 0
             websocket = await websockets.connect(self.url)
                 
             await self.auth(websocket)
@@ -346,9 +378,13 @@ class Deribit_Exchange:
                 except Exception as E:
                     self.logger.info(f'Error in close_losing_positions: {E}')
                     self.logger.info(f'Reconnecting close_losing_positions...')
+                    err_tresh += 1
                     websocket = await websockets.connect(self.url)
                     await self.auth(websocket)
                     await asyncio.sleep(0.5)
+
+                    if err_tresh == 4:
+                        raise CBotError('Error treshold reached in post_orders!')
 
     async def fetch_account_equity(self, ws):
 
@@ -362,16 +398,26 @@ class Deribit_Exchange:
         if not self.trading: return
 
         orders = await self.get_positions(ws, currency=self.currency)
+        dates_traded_temp = {}
 
         for order in orders:
-            _, _, strike, order_type  = order['label'].split('-')
+            _, odate, strike, order_type  = order['instrument_name'].split('-')
 
             if order_type == 'P':
                 instrument = self.put_options[float(strike)]
             else:
                 instrument = self.call_options[float(strike)]
 
-            self.orders[order['order_id']] = instrument
+            self.orders[order['instrument_name']] = instrument
+
+            if odate in dates_traded_temp:
+                dates_traded_temp[odate] += float(order['average_price'])
+            else:
+                dates_traded_temp[odate] = float(order['average_price'])
+
+        # currently not possible to distinguish positions per premium group during get positions
+        for dte, prems in dates_traded_temp.items():
+            self.dates_traded[dte] = { prems }
 
     async def order_mgmt_func_bk(self):
 

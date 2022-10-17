@@ -18,13 +18,15 @@ class CBot:
     Launch via the run method or asynchronously via start.
     The business logic of the bot itself is described in the worker method."""
 
-    def __init__(self, exchange, money_mngmt, arbitrage_strategy, interval: int = 2, 
+    def __init__(self, exchange, money_mngmt, run_strategy, interval: int = 2, 
         logger: Union[logging.Logger, str, None] = None):
 
         self.interval = interval
         self.exchange = exchange
         self.money_mngmt = money_mngmt
-        self.arbitrage_strategy = arbitrage_strategy
+
+        self.test_strategy = run_strategy['test']
+        self.trade_strategy = run_strategy['trading']
 
         self.logger = (logging.getLogger(logger) if isinstance(logger,str) else logger)
         if self.logger is None:
@@ -75,12 +77,16 @@ class CBot:
             if self.exchange.updated:
                 price = self.exchange.asset_price
 
-                order_list = self.arbitrage_strategy(self.exchange.put_options, self.exchange.call_options, price)
+                # trade strategy
+                order_list = self.trade_strategy(self.exchange.put_options, self.exchange.call_options, price)
+                if order_list:
+                    await self.exchange.post_orders(order_list)
+
+                # log strategy results for testing
+                order_list = self.test_strategy(self.exchange.put_options, self.exchange.call_options, price)
 
                 if order_list.size:
                     self.logger.info(f'Price index: {price}')
-
-                    await self.exchange.post_orders(order_list)
                     
                     for d in order_list:
                         self.logger.log(FILE, ",".join(d))
