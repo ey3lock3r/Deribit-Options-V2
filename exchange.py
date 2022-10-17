@@ -649,13 +649,12 @@ class Deribit_Exchange:
             price = self.asset_price
             price -= price % styk_interval
 
-            # pd_inst = pd_inst[(pd_inst['date'] == expire_dt) & (pd_inst['strike'] >= price - bounds) & (pd_inst['strike'] <= price + bounds)]
-            # pd_inst = pd_inst[(pd_inst['settlement_period'] != 'month') & (pd_inst['settlement_period'] != 'week')]
-            pd_inst = pd_inst[(pd_inst['date'] == expire_dt) \
-                & (
-                    ((pd_inst['option_type'] == 'call') & (pd_inst['strike'] >= price - 2000) & (pd_inst['strike'] <= price + bounds)) \
-                    | ((pd_inst['option_type'] == 'put') & (pd_inst['strike'] >= price - bounds) & (pd_inst['strike'] <= price + 2000))
-                )]
+            pd_inst = pd_inst[(pd_inst['date'] == expire_dt) & (pd_inst['strike'] >= price - bounds) & (pd_inst['strike'] <= price + bounds)]
+            # pd_inst = pd_inst[(pd_inst['date'] == expire_dt) \
+            #     & (
+            #         ((pd_inst['option_type'] == 'call') & (pd_inst['strike'] >= price - 2000) & (pd_inst['strike'] <= price + bounds)) \
+            #         | ((pd_inst['option_type'] == 'put') & (pd_inst['strike'] >= price - bounds) & (pd_inst['strike'] <= price + 2000))
+            #     )]
             pd_inst.sort_index(inplace=True)
 
             if pd_inst.empty:
