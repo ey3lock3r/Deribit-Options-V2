@@ -136,21 +136,21 @@ class CBot:
         #     options_dict[strike].update(new_data)
 
         delay = 0.5
-        for key, val in self.exchange.call_options.items():
+        for key in self.exchange.call_options:
             tasks.append(
                 asyncio.create_task(
-                    self.exchange.fetch_orderbook_data(key, val['instrument_name'], self.exchange.call_options, delay=delay)
+                    self.exchange.fetch_orderbook_data(key, delay=delay)
                 )
             )
             delay += 0.5
         
-        for key, val in self.exchange.put_options.items():
-            tasks.append(
-                asyncio.create_task(
-                    self.exchange.fetch_orderbook_data(key, val['instrument_name'], self.exchange.put_options, delay=delay)
-                )
-            )
-            delay += 0.5
+        # for key, val in self.exchange.put_options.items():
+        #     tasks.append(
+        #         asyncio.create_task(
+        #             self.exchange.fetch_orderbook_data(key, val['instrument_name'], self.exchange.put_options, delay=delay)
+        #         )
+        #     )
+        #     delay += 0.5
 
         self.logger.info(f'Number of tasks: {len(tasks)}')
         await asyncio.gather(*tasks)

@@ -521,21 +521,30 @@ class Deribit_Exchange:
 
         self.logger.info('fetch_deribit_price_index listener ended..')
 
-    async def fetch_orderbook_data(self, strike: str, instrument_name: str, options_dict: dict,
-                                    delay: float = 0) -> NoReturn:
+    async def fetch_orderbook_data(self, strike: str, delay: float = 0) -> NoReturn:
         """Реализует логику работы бота"""
         await asyncio.sleep(delay)
         
-        self.logger.info(f'fetch_orderbook_data: Listener for {instrument_name} started..')
+        self.logger.info(f'fetch_orderbook_data: Listener for {strike} started..')
 
         websocket = await websockets.connect(self.url)
 
         await self.auth(websocket)
+
+        # send put instrument
+        put_inst_name = self.put_options[float(strike)]['instrument_name']
         await websocket.send(
             self.create_message(
                 'private/subscribe',
-                # { "channels": [f'quote.{instrument_name}'] }
-                { "channels": [f'ticker.{instrument_name}.raw'] }
+                { "channels": [f'ticker.{put_inst_name}.raw'] }
+            )
+        )
+        # send call instrument
+        call_inst_name = self.call_options[float(strike)]['instrument_name']
+        await websocket.send(
+            self.create_message(
+                'private/subscribe',
+                { "channels": [f'ticker.{call_inst_name}.raw'] }
             )
         )
 
@@ -563,8 +572,14 @@ class Deribit_Exchange:
                         'rho': data['greeks']['rho']
                     }
 
-                    # func(options_dict, strike, new_data)
-                    options_dict[strike].update(new_data)
+                    _, _, strike, order_type  = data['instrument_name'].split('-')
+
+                    if order_type == 'P':
+                        self.put_options[float(strike)].update(new_data)
+                    else:
+                        self.call_options[float(strike)].update(new_data)
+
+                    # options_dict[strike].update(new_data)
                     self.updated = True
                 
                 else:
@@ -572,19 +587,24 @@ class Deribit_Exchange:
                     self.logger.info(f'Message: {message}')
             
             except Exception as E:
-                self.logger.info(f'Reconnecting listener for {instrument_name}')
+                self.logger.info(f'Reconnecting listener for {strike}')
                 websocket = await websockets.connect(self.url)
                 await self.auth(websocket)
                 await websocket.send(
                     self.create_message(
                         'private/subscribe',
-                        # { "channels": [f'quote.{instrument_name}'] }
-                        { "channels": [f'ticker.{instrument_name}.raw'] }
+                        { "channels": [f'ticker.{put_inst_name}.raw'] }
+                    )
+                )
+                await websocket.send(
+                    self.create_message(
+                        'private/subscribe',
+                        { "channels": [f'ticker.{call_inst_name}.raw'] }
                     )
                 )
                 await asyncio.sleep(delay)
 
-        self.logger.info(f'fetch_orderbook_data: Listener for {instrument_name} ended..')
+        self.logger.info(f'fetch_orderbook_data: Listener for {strike} ended..')
 
     async def prepare_option_struct(self) -> NoReturn:
 
