@@ -504,9 +504,14 @@ class Deribit_Exchange:
 
                     await self.close_losing_positions()
 
-                    if self.asset_price >= self.init_price + 2000 or self.asset_price <= self.init_price - 2000:
-                        self.logger.info('Resetting bot... ')
-                        raise CBotError('Price moved +-2000!')
+                    price = int(self.asset_price)
+                    if price in self.put_options:
+                        self.logger.info(f'ATM PUT buy price:  {self.put_options[price]["ask"]}')
+                        self.logger.info(f'ATM CALL buy price: {self.call_options[price]["ask"]}')
+
+                    # if self.asset_price >= self.init_price + 2000 or self.asset_price <= self.init_price - 2000:
+                    #     self.logger.info('Resetting bot... ')
+                    #     raise CBotError('Price moved +-2000!')
             
             except Exception as E:
                 self.logger.info(f'Error in fetch_deribit_price_index: {E}')
