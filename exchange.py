@@ -322,6 +322,7 @@ class Deribit_Exchange:
                             amount = self.order_size
                         )
                         if 'order' in order_res:
+                            self.logger.info(f'Sold {self.order_size} amount of {order_det["instrument_name"]} at {order["bid"]} premium')
                             order_det = order_res['order']
                             self.orders[order_det['instrument_name']] = order['instrument']
                             order_list.pop(idx)
