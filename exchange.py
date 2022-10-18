@@ -152,8 +152,10 @@ class Deribit_Exchange:
 
         return self.get_response_result(await ws.recv())
 
-    async def get_index_price(self, ws) -> Optional[dict]:
+    async def get_index_price(self, ws, delay = 0) -> Optional[dict]:
         self.logger.info('get_index_price')
+
+        await asyncio.sleep(delay)
 
         prop = { 'index_name': f'{self.currency.lower()}_usd' }
 
@@ -443,17 +445,19 @@ class Deribit_Exchange:
 
             raise CBotError('Test cycle ended!')
 
-    async def fetch_account_equity(self, ws):
+    async def fetch_account_equity(self, ws, delay=0):
 
         if not self.trading: return
 
+        await asyncio.sleep(delay)
         res = await self.get_account_summary(ws, currency=self.currency)
         self.equity = float(res['equity'])
 
-    async def fetch_account_positions(self, ws):
+    async def fetch_account_positions(self, ws, delay = 0):
 
         if not self.trading: return
 
+        await asyncio.sleep(delay)
         # orders = await self.get_positions(ws, currency=self.currency)
         orders = await self.get_order_history_by_currency(ws, currency=self.currency)
 
@@ -527,9 +531,9 @@ class Deribit_Exchange:
 
         await self.auth(websocket)
         await asyncio.gather(
-            self.fetch_account_equity(websocket),
-            self.fetch_account_positions(websocket),
-            self.get_index_price(websocket)
+            self.fetch_account_equity(websocket, 0.5),
+            self.fetch_account_positions(websocket, 1),
+            self.get_index_price(websocket, 1.5)
         )
         await websocket.send(
             self.create_message(
