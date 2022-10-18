@@ -167,6 +167,8 @@ class Deribit_Exchange:
         price = self.get_response_result(await ws.recv())
         if 'index_price' in price:
             self.init_price = price['index_price']
+            self.asset_price = price['index_price']
+            self.updated = True
 
     async def create_order(self, ws, instrument_name: str, price: float, amount: float,
                             direction: str = 'sell', label: str = '',
