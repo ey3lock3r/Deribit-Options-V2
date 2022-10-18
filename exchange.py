@@ -153,6 +153,7 @@ class Deribit_Exchange:
         return self.get_response_result(await ws.recv())
 
     async def get_index_price(self, ws, delay = 0) -> Optional[dict]:
+        
         self.logger.info('get_index_price')
 
         await asyncio.sleep(delay)
@@ -312,6 +313,8 @@ class Deribit_Exchange:
         if not self.trading: return
         if self.equity <= 0: return
 
+        self.logger.info(f'post_orders')
+
         order_list, premium = data
         if order_list:
             err_tresh = 0
@@ -412,7 +415,7 @@ class Deribit_Exchange:
                     await asyncio.sleep(0.5)
 
                     if err_tresh == 4:
-                        raise CBotError('Error treshold reached in post_orders!')
+                        raise CBotError('Error treshold reached in close_losing_positions!')
 
     async def close_all_positions(self):
 
@@ -433,21 +436,23 @@ class Deribit_Exchange:
                     break
 
                 except Exception as E:
-                    self.logger.info(f'Error in close_losing_positions: {E}')
-                    self.logger.info(f'Reconnecting close_losing_positions...')
+                    self.logger.info(f'Error in close_all_positions: {E}')
+                    self.logger.info(f'Reconnecting close_all_positions...')
                     err_tresh += 1
                     websocket = await websockets.connect(self.url)
                     await self.auth(websocket)
                     await asyncio.sleep(0.5)
 
                     if err_tresh == 4:
-                        raise CBotError('Error treshold reached in post_orders!')
+                        raise CBotError('Error treshold reached in close_all_positions!')
 
             raise CBotError('Test cycle ended!')
 
     async def fetch_account_equity(self, ws, delay=0):
 
         if not self.trading: return
+
+        self.logger.info(f'fetch_account_equity')
 
         await asyncio.sleep(delay)
         res = await self.get_account_summary(ws, currency=self.currency)
@@ -456,6 +461,8 @@ class Deribit_Exchange:
     async def fetch_account_positions(self, ws, delay = 0):
 
         if not self.trading: return
+
+        self.logger.info(f'fetch_account_positions')
 
         await asyncio.sleep(delay)
         orders = await self.get_positions(ws, currency=self.currency)
