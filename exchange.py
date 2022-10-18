@@ -315,6 +315,7 @@ class Deribit_Exchange:
             while True:
                 try:
                     for idx, order in enumerate(order_list.copy()):
+                        self.logger.info(f'Selling {self.order_size} amount of {order["instrument"]["instrument_name"]} at {order["bid"]]} premium')
                         order_res = await self.create_order(
                             websocket,
                             instrument_name = order['instrument']['instrument_name'],
@@ -323,7 +324,6 @@ class Deribit_Exchange:
                         )
                         if 'order' in order_res:
                             order_det = order_res['order']
-                            self.logger.info(f'Sold {self.order_size} amount of {order_det["instrument_name"]} at {order_det["price"]} premium')
                             self.orders[order_det['instrument_name']] = order['instrument']
                             order_list.pop(idx)
                             premiums += float(order['bid'])
@@ -371,8 +371,8 @@ class Deribit_Exchange:
                         if (order['option_type'] == 'put' and self.asset_price <= order['strike']) or \
                             (order['option_type'] == 'call' and self.asset_price >= order['strike']):
                             
+                            self.logger.info(f'Closing position {order["instrument_name"]} at price {order["ask"]}')
                             res = await self.close_position(websocket, order['instrument_name'], order['ask'])
-                            self.logger.info(f'Closing position {order["instrument_name"]} with profit/loss: {res["order"]["profit_loss"]}')
                             self.orders.pop(id, None)
                             await asyncio.sleep(0.5)
                     
