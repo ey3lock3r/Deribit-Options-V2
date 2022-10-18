@@ -458,8 +458,8 @@ class Deribit_Exchange:
         if not self.trading: return
 
         await asyncio.sleep(delay)
-        # orders = await self.get_positions(ws, currency=self.currency)
-        orders = await self.get_order_history_by_currency(ws, currency=self.currency)
+        orders = await self.get_positions(ws, currency=self.currency)
+        orders_hist = await self.get_order_history_by_currency(ws, currency=self.currency)
 
         for order in orders:
             _, odate, strike, order_type  = order['instrument_name'].split('-')
@@ -471,6 +471,9 @@ class Deribit_Exchange:
 
             self.orders[order['instrument_name']] = instrument
 
+        for order in orders_hist:
+            _, odate, strike, order_type  = order['instrument_name'].split('-')
+            
             if odate == self.odate:
                 lbl_prem = order['label']
 
