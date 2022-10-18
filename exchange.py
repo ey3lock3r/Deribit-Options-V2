@@ -346,6 +346,7 @@ class Deribit_Exchange:
                     await asyncio.sleep(0.5)
 
                     if err_tresh == 4:
+                        # close openned positions after 3 errors
                         raise CBotError('Error treshold reached in post_orders!')
 
             # if odate in self.dates_traded:
