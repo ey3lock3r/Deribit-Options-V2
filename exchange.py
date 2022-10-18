@@ -37,7 +37,7 @@ class Deribit_Exchange:
             self.close_losing_positions = self.close_all_positions
 
         self.init_vals()
-        self.logger.info(f'Bot init for {self.currency} options')
+        self.logger.info(f'Bot init for {self.currency} options, tradin = {trading}')
 
     @property
     def keep_alive(self) -> bool :
@@ -549,7 +549,7 @@ class Deribit_Exchange:
                     self.asset_price = data['price']
                     self.updated = True
 
-                    self.logger.debug(f'Price index: {data}')
+                    self.logger.debug(f'Price index: {self.asset_price}')
 
                     await self.close_losing_positions()
 
