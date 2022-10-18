@@ -689,6 +689,8 @@ class Deribit_Exchange:
             await self.auth(websocket)
             
             raw_instruments = await self.get_instruments(websocket)
+            await self.get_index_price(websocket)
+            
             # self.logger.info(f'Instruments: \n{raw_instruments[0]}')
 
             if not raw_instruments:
