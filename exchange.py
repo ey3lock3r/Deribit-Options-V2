@@ -543,8 +543,8 @@ class Deribit_Exchange:
         await self.auth(websocket)
         await asyncio.gather(
             self.fetch_account_equity(websocket, 0.5),
-            self.fetch_account_positions(websocket, 1),
-            self.get_index_price(websocket, 1.5)
+            # self.fetch_account_positions(websocket, 1),
+            self.get_index_price(websocket, 1)
         )
 
         order_res = await self.create_order(
