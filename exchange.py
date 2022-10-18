@@ -476,7 +476,8 @@ class Deribit_Exchange:
             else:
                 instrument = self.call_options[float(strike)]
 
-            self.orders[order['instrument_name']] = instrument
+            if order['realized_profit_loss'] == 0:
+                self.orders[order['instrument_name']] = instrument
 
         for order in orders_hist:
             _, odate, strike, order_type  = order['instrument_name'].split('-')
