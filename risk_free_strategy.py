@@ -121,7 +121,7 @@ def selling_premiums(put_options, call_options, price):
 
     return np.array(data, dtype=str)
 
-def sell_008_premium_2k_dist(put_options, call_options, price):
+def sell_008_premium_2k_dist(put_options, call_options, price, ord_size):
     data = []
     sum_premium = 0
 
