@@ -619,7 +619,7 @@ class Deribit_Exchange:
         self.logger.info('prepare_option_struct')
         DAY = None
 
-        if datetime.now().hour <= 8:
+        if datetime.now().hour < 8:
             DAY = timedelta(1)          # 1 day option expiry
         else:
             DAY = timedelta(2)          # 2 days option expiry
