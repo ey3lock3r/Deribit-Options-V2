@@ -71,6 +71,7 @@ class CBot:
         call_label = ['instrument_name', 'C_Strike', 'C_Premium', 'C_Delta', 'C_Gamma', 'C_Vega', 'C_Rho']
         self.logger.log(FILE, ",".join(put_label + call_label))
 
+        sum_premium = 0
         while self.exchange.keep_alive:
             self.logger.info('Checking for risk free trade...')
 
@@ -78,22 +79,23 @@ class CBot:
                 price = self.exchange.asset_price
 
                 # trade strategy
-                order_list = self.trade_strategy(self.exchange.put_options, self.exchange.call_options, price)
-                if order_list:
-                    await self.exchange.post_orders(order_list)
+                if self.trade_strategy:
+                    data = self.trade_strategy(self.exchange.put_options, self.exchange.call_options, price)
+                    await self.exchange.post_orders(data)
 
                 # log strategy results for testing
-                order_list = self.test_strategy(self.exchange.put_options, self.exchange.call_options, price)
+                if self.test_strategy:
+                    order_list = self.test_strategy(self.exchange.put_options, self.exchange.call_options, price)
 
-                if order_list.size:
-                    self.logger.info(f'Price index: {price}')
-                    
-                    for d in order_list:
-                        self.logger.log(FILE, ",".join(d))
-                        # self.logger.log(FILE, ",".join(df_arbi.iloc[1].values.astype(str)))
+                    if order_list.size:
+                        self.logger.info(f'Price index: {price}')
+                        
+                        for d in order_list:
+                            self.logger.log(FILE, ",".join(d))
+                            # self.logger.log(FILE, ",".join(df_arbi.iloc[1].values.astype(str)))
 
-                        # min = df_arbi['Cost'].values.argmin()
-                        # self.logger.log(FILE, ",".join(df_arbi.iloc[min].values.astype(str)))
+                            # min = df_arbi['Cost'].values.argmin()
+                            # self.logger.log(FILE, ",".join(df_arbi.iloc[min].values.astype(str)))
 
                 self.exchange.updated = False
                 self.count_to_reset = 0
@@ -225,7 +227,7 @@ class CBot:
 
                 time.sleep(1)
 
-                if self.stop:
+                if self.stop and self.env == 'test':
                     break
                     
                 self.init_vals()

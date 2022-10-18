@@ -6,9 +6,9 @@ exchange:
     test: wss://test.deribit.com/ws/api/v2
     prod: wss://www.deribit.com/ws/api/v2
 
-  env: 'prod'
-  trading: false
-  order_size: 0.1
+  env: 'test'
+  trading: true
+  order_size: 1
 
   auth:
     test:

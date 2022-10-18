@@ -33,6 +33,9 @@ class Deribit_Exchange:
 
         self.df_initcols = ['strike', 'instrument_name', 'option_type']
 
+        if env == 'test': # set 
+            self.close_losing_positions = self.close_all_positions
+
         self.init_vals()
         self.logger.info(f'Bot init for {self.currency} options')
 
@@ -71,6 +74,8 @@ class Deribit_Exchange:
         self.equity = None
         self.init_price = None
         self.dates_traded = {}
+        self.traded_prems = set()
+        self.odate = None
         
     def create_message(self, method: str, params: dict = {},
                         mess_id: Union[int, str, None] = None,
@@ -245,6 +250,19 @@ class Deribit_Exchange:
 
         return self.get_response_result(await ws.recv(), raise_error = raise_error)
 
+    async def get_order_history_by_currency(self, ws, currency: str = 'BTC', kind: str = 'option',
+                                    raise_error: bool = True):
+
+        await ws.send(
+            self.create_message(
+                f'private/get_order_history_by_currency',
+                { 'currency': currency,
+                  'kind': kind }
+            )
+        )
+
+        return self.get_response_result(await ws.recv(), raise_error = raise_error)
+
     async def get_account_summary(self, ws, currency: str = 'BTC',
                                     raise_error: bool = True):
 
@@ -285,19 +303,20 @@ class Deribit_Exchange:
 
         return self.get_response_result(await ws.recv())
 
-    async def post_orders(self, order_list: list = []):
+    async def post_orders(self, data = ()):
 
         if not self.trading: return
         if self.equity <= 0: return
 
+        order_list, premium = data
         if order_list:
             err_tresh = 0
-            premiums = 0
-            tprems = 0
+            # premiums = 0
+            # tprems = 0
 
             _, odate, _, _  = order_list[0]['instrument']['instrument_name'].split('-')
-            if odate in self.dates_traded:
-                return                      # trading done for the day
+            # if odate in self.dates_traded:
+            #     return                      # trading done for the day
 
             # if multiple trades
             # currently not possible to distinguish positions per premium group during get positions
@@ -305,8 +324,8 @@ class Deribit_Exchange:
             #     tprems += float(order['bid'])
 
             # if odate in self.dates_traded:
-            #     if tprems in self.dates_traded[odate]:
-            #         return
+            if premium in self.traded_prems:
+                return
 
             websocket = await websockets.connect(self.url)
                 
@@ -320,13 +339,14 @@ class Deribit_Exchange:
                             websocket,
                             instrument_name = order['instrument']['instrument_name'],
                             price = order['bid'],
-                            amount = self.order_size
+                            amount = self.order_size,
+                            label = premium
                         )
                         if 'order' in order_res:
                             order_det = order_res['order']
                             self.orders[order_det['instrument_name']] = order['instrument']
                             order_list.pop(idx)
-                            premiums += float(order['bid'])
+                            # premiums += float(order['bid'])
                             await asyncio.sleep(0.5)
 
                         else:
@@ -351,11 +371,11 @@ class Deribit_Exchange:
 
             # if odate in self.dates_traded:
                 # currently not possible to distinguish positions per premium group during get positions
-                # if premiums not in self.dates_traded[odate]:  
-                # self.dates_traded[odate].add(premiums)
+                # if premium not in self.dates_traded[odate]:  
+                # self.dates_traded[odate].add(premium)
             
             # else:
-            self.dates_traded[odate] = { premiums }
+            self.traded_prems.add(premium)
     
     async def close_losing_positions(self):
 
@@ -390,6 +410,37 @@ class Deribit_Exchange:
                     if err_tresh == 4:
                         raise CBotError('Error treshold reached in post_orders!')
 
+    async def close_all_positions(self):
+
+        if self.orders:
+            err_tresh = 0
+            websocket = await websockets.connect(self.url)
+                
+            await self.auth(websocket)
+
+            while True:
+                try:
+                    for id, order in self.orders.copy().items():
+                        self.logger.info(f'Closing position {order["instrument_name"]} at price {order["ask"]}')
+                        res = await self.close_position(websocket, order['instrument_name'], order['ask'])
+                        self.orders.pop(id, None)
+                        await asyncio.sleep(0.5)
+                    
+                    break
+
+                except Exception as E:
+                    self.logger.info(f'Error in close_losing_positions: {E}')
+                    self.logger.info(f'Reconnecting close_losing_positions...')
+                    err_tresh += 1
+                    websocket = await websockets.connect(self.url)
+                    await self.auth(websocket)
+                    await asyncio.sleep(0.5)
+
+                    if err_tresh == 4:
+                        raise CBotError('Error treshold reached in post_orders!')
+
+            raise CBotError('Test cycle ended!')
+
     async def fetch_account_equity(self, ws):
 
         if not self.trading: return
@@ -401,8 +452,8 @@ class Deribit_Exchange:
 
         if not self.trading: return
 
-        orders = await self.get_positions(ws, currency=self.currency)
-        dates_traded_temp = {}
+        # orders = await self.get_positions(ws, currency=self.currency)
+        orders = await self.get_order_history_by_currency(ws, currency=self.currency)
 
         for order in orders:
             _, odate, strike, order_type  = order['instrument_name'].split('-')
@@ -414,14 +465,11 @@ class Deribit_Exchange:
 
             self.orders[order['instrument_name']] = instrument
 
-            if odate in dates_traded_temp:
-                dates_traded_temp[odate] += float(order['average_price'])
-            else:
-                dates_traded_temp[odate] = float(order['average_price'])
+            if odate == self.odate:
+                lbl_prem = order['label']
 
-        # currently not possible to distinguish positions per premium group during get positions
-        for dte, prems in dates_traded_temp.items():
-            self.dates_traded[dte] = { prems }
+                if lbl_prem not in self.traded_prems:
+                    self.traded_prems.add(lbl_prem)
 
     async def order_mgmt_func_bk(self):
 
@@ -628,6 +676,8 @@ class Deribit_Exchange:
         self.logger.info(f'Today is {expire_dt}')
         expire_dt = expire_dt.strftime(f"{expire_dt.day}%b%y").upper()
         self.logger.info(f'Today is {expire_dt}')
+
+        self.odate = expire_dt
 
         async with websockets.connect(self.url) as websocket:
             
