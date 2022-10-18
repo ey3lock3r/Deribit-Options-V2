@@ -538,6 +538,8 @@ class Deribit_Exchange:
             )
         )
 
+        self.logger.info(f'fetch_deribit_price_index: before while loop')
+
         data = None
         while self.keep_alive:
 
