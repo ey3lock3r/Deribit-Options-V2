@@ -521,6 +521,7 @@ class Deribit_Exchange:
 
     async def fetch_deribit_price_index(self) -> NoReturn:
         """Реализует логику работы бота"""
+        self.logger.info(f'fetch_deribit_price_index')
 
         websocket = await websockets.connect(self.url)
 
