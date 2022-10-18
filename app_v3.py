@@ -25,14 +25,14 @@ def main():
     logging.addLevelName(FILE,"FILE")
     logging.config.dictConfig(config['logging'])
     
+    # option_strats = {
+    #     'test': selling_premiums,
+    #     'trading': sell_008_premium_2k_dist
+    # }
     option_strats = {
         'test': selling_premiums,
-        'trading': sell_008_premium_2k_dist
+        'trading': test
     }
-    # option_strats = {
-    #     'test': None,
-    #     'trading': test
-    # }
     
     deribit_exch = Deribit_Exchange(**config['exchange'])
     bot = CBot(**config['bot'], exchange=deribit_exch, run_strategy=option_strats, money_mngmt=None)
