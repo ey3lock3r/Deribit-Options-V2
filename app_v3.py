@@ -25,12 +25,14 @@ def main():
     logging.addLevelName(FILE,"FILE")
     logging.config.dictConfig(config['logging'])
     
-    # arbitrage_strat = check_riskfree_trade_v2
-    # arbitrage_strat = collar_strategy
     option_strats = {
-        'test': None, #selling_premiums,
-        'trading': test #sell_008_premium_2k_dist
+        'test': selling_premiums,
+        'trading': sell_008_premium_2k_dist
     }
+    # option_strats = {
+    #     'test': None,
+    #     'trading': test
+    # }
     
     deribit_exch = Deribit_Exchange(**config['exchange'])
     bot = CBot(**config['bot'], exchange=deribit_exch, run_strategy=option_strats, money_mngmt=None)
