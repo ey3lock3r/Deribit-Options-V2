@@ -238,7 +238,7 @@ class CBot:
 
                 time.sleep(1)
 
-                if self.stop and self.exchange.env == 'test':
+                if self.stop or self.exchange.env == 'test':
                     break
                     
                 self.init_vals()

@@ -549,16 +549,17 @@ class Deribit_Exchange:
 
         order_res = await self.create_order(
             websocket,
-            instrument_name = 'BTC-20OCT22-17500-P',
-            price = 0.0155,
+            instrument_name = 'BTC-20OCT22-18000-P',
+            price = 0.0205,
             amount = self.order_size,
-            label = '0.0155'
+            label = '0.0205'
         )
         if 'order' in order_res:
             order_det = order_res['order']
             await asyncio.sleep(0.5)
 
-        await self.close_position(websocket, 'BTC-20OCT22-17500-P', 0.0195)
+        await self.close_position(websocket, 'BTC-20OCT22-18000-P', 0.0255)
+
 
         self.logger.info(f'test_run ended!')
 
