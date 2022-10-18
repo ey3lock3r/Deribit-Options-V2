@@ -105,7 +105,7 @@ class CBot:
                 self.logger.info('Prices not updated')
                 self.count_to_reset += 1
 
-                if self.count_to_reset == 30:
+                if self.count_to_reset == 100:
                     # self.exchange.keep_alive = False
                     self.logger.info('Resetting connection... ')
                     raise CBotError('Count_to_reset reached!')
