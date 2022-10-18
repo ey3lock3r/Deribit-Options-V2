@@ -28,7 +28,7 @@ def main():
     # arbitrage_strat = check_riskfree_trade_v2
     # arbitrage_strat = collar_strategy
     option_strats = {
-        'test': None #selling_premiums,
+        'test': None, #selling_premiums,
         'trading': test #sell_008_premium_2k_dist
     }
     
