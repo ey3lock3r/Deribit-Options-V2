@@ -114,6 +114,14 @@ class CBot:
 
         self.logger.info('check_riskfree_trade ended!')
 
+    async def test_start(self):
+
+        self.logger.info('start running')
+
+        tasks = []
+
+        await self.exchange.test_run()
+
 
     async def start(self):
         """Starts the bot with the parameters for synchronization.
@@ -122,7 +130,7 @@ class CBot:
         self.logger.info('start running')
 
         tasks = []
-
+    
         # tasks.append(asyncio.to_thread(self.check_riskfree_trade))
         tasks.append(asyncio.create_task(self.end_of_day()))
         tasks.append(asyncio.create_task(self.exchange.fetch_deribit_price_index()))
@@ -201,6 +209,9 @@ class CBot:
 
         self.logger.info('Run started')
         loop = asyncio.get_event_loop()
+
+        if self.exchange.env == 'test':
+            self.start = self.test_start
 
         while True:
             try:

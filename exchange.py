@@ -534,6 +534,37 @@ class Deribit_Exchange:
 
             await asyncio.sleep(0.5)
 
+    async def test_run(self) -> NoReturn:
+
+        self.logger.info(f'test_run')
+
+        websocket = await websockets.connect(self.url)
+
+        await self.auth(websocket)
+        await asyncio.gather(
+            self.fetch_account_equity(websocket, 0.5),
+            self.fetch_account_positions(websocket, 1),
+            self.get_index_price(websocket, 1.5)
+        )
+
+        order_res = await self.create_order(
+            websocket,
+            instrument_name = 'BTC-20OCT22-16000-P',
+            price = 0.0045,
+            amount = self.order_size,
+            label = '0.0045'
+        )
+        if 'order' in order_res:
+            order_det = order_res['order']
+            self.orders[order_det['instrument_name']] = order['instrument']
+            order_list.pop(idx)
+            # premiums += float(order['bid'])
+            await asyncio.sleep(0.5)
+
+        await self.close_all_positions()
+
+        self.logger.info(f'test_run ended!')
+
     async def fetch_deribit_price_index(self) -> NoReturn:
         """Реализует логику работы бота"""
         self.logger.info(f'fetch_deribit_price_index')
