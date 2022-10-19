@@ -26,7 +26,7 @@ def main():
     logging.config.dictConfig(config['logging'])
     
     option_strats = {
-        'test': None, #selling_premiums,
+        'test': selling_premiums,
         'trading': sell_008_premium_2k_dist
     }
     # option_strats = {
