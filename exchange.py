@@ -313,13 +313,10 @@ class Deribit_Exchange:
         if not self.trading: return
         if self.equity <= 0: return
 
-        self.logger.info(f'post_orders')
-
         order_list, premium = data
         if order_list:
+            self.logger.info(f'post_orders')
             err_tresh = 0
-            # premiums = 0
-            # tprems = 0
 
             _, odate, _, _  = order_list[0]['instrument']['instrument_name'].split('-')
             # if odate in self.dates_traded:
@@ -604,8 +601,8 @@ class Deribit_Exchange:
 
                     price = int(self.asset_price)
                     if price in self.put_options:
-                        self.logger.info(f'ATM PUT buy price:  {self.put_options[price]["ask"]}')
-                        self.logger.info(f'ATM CALL buy price: {self.call_options[price]["ask"]}')
+                        self.logger.info(f'ATM PUT buy price:  {self.put_options[price]["ask"]}: price: {price}')
+                        self.logger.info(f'ATM CALL buy price: {self.call_options[price]["ask"]}: price: {price}')
 
                     # if self.asset_price >= self.init_price + 2000 or self.asset_price <= self.init_price - 2000:
                     #     self.logger.info('Resetting bot... ')
