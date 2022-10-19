@@ -194,7 +194,7 @@ class CBot:
         # # executor.submit(self.check_riskfree_trade)
 
     async def end_of_day(self):
-        if datetime.now().hour > 8:
+        if datetime.now().hour >= 8:
             await asyncio.sleep( 86400 - time.time() % 86400 + 28800)   # 24hrs + 8hrs, 8am
         else:
             await asyncio.sleep( 28800 - time.time() % 28800)   # 8hrs, 8am
