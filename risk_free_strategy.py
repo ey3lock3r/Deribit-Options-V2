@@ -142,17 +142,22 @@ def sell_008_premium_2k_dist(put_options, call_options, price, ord_size):
         df_call = df_call.iloc[cmax]
 
         sum_premium = df_put['bid'] + df_call['bid']
-        if sum_premium >= 0.008 and abs(df_call['strike'] - df_put['strike']) >= 2000:
+        strk_dist = abs(df_call['strike'] - df_put['strike'])
+        if sum_premium >= 0.008 and strk_dist >= 1500:
             data.append({
                 'instrument': put_options[float(df_put['strike'])],
-                'bid': df_put['bid']
+                'bid': df_put['bid'],
+                'sum_prem': sum_premium,
+                'strike_dist': strk_dist
             })
             data.append({
                 'instrument': call_options[float(df_call['strike'])],
-                'bid': df_call['bid']
+                'bid': df_call['bid'],
+                'sum_prem': sum_premium,
+                'strike_dist': strk_dist
             })
 
-    return (data, str(sum_premium))
+    return data
 
 def test(put_options, call_options, price):
     data = []

@@ -308,17 +308,18 @@ class Deribit_Exchange:
 
         return self.get_response_result(await ws.recv())
 
-    async def post_orders(self, data = ()):
+    async def post_orders(self, order_list):
 
         if not self.trading: return
         if self.equity <= 0: return
 
-        order_list, premium = data
+        # order_list, premium = data
         if order_list:
             self.logger.info(f'post_orders')
             err_tresh = 0
 
             _, odate, _, _  = order_list[0]['instrument']['instrument_name'].split('-')
+            premium = str(order_list[0]['sum_prem'])
             # if odate in self.dates_traded:
             #     return                      # trading done for the day
 
@@ -339,12 +340,13 @@ class Deribit_Exchange:
                 try:
                     for idx, order in enumerate(order_list.copy()):
                         self.logger.info(f'Selling {self.order_size} amount of {order["instrument"]["instrument_name"]} at {order["bid"]} premium')
+                        strike_dist = order['instrument']['strike_dist']
                         order_res = await self.create_order(
                             websocket,
                             instrument_name = order['instrument']['instrument_name'],
                             price = order['bid'],
                             amount = self.order_size,
-                            label = premium
+                            label =  f'{premium},{strike_dist}' #premium, strike distance, 
                         )
                         if 'order' in order_res:
                             order_det = order_res['order']
@@ -480,7 +482,7 @@ class Deribit_Exchange:
             _, odate, strike, order_type  = order['instrument_name'].split('-')
             
             if odate == self.odate:
-                lbl_prem = order['label']
+                lbl_prem, _ = order['label'].split(',')
 
                 if lbl_prem not in self.traded_prems:
                     self.traded_prems.add(lbl_prem)
