@@ -332,11 +332,11 @@ class Deribit_Exchange:
             if premium in self.traded_prems:
                 return
 
-            websocket = await websockets.connect(self.url)
-                
-            await self.auth(websocket)
+            # websocket = await websockets.connect(self.url)
+            async with websockets.connect(self.url) as websocket:
+
+                await self.auth(websocket)
             
-            while True:
                 try:
                     for idx, order in enumerate(order_list.copy()):
                         self.logger.info(f'Selling {self.order_size} amount of {order["instrument"]["instrument_name"]} at {order["bid"]} premium')
@@ -361,19 +361,18 @@ class Deribit_Exchange:
                     # update equity
                     res = await self.get_account_summary(websocket, currency=self.currency)
                     self.equity = float(res['equity'])
-                    break
 
                 except Exception as E:
                     self.logger.info(f'Error in post_orders: {E}')
                     self.logger.info(f'Reconnecting post_orders...')
-                    err_tresh += 1
-                    websocket = await websockets.connect(self.url)
-                    await self.auth(websocket)
-                    await asyncio.sleep(0.5)
+                    # err_tresh += 1
+                    # websocket = await websockets.connect(self.url)
+                    # await self.auth(websocket)
+                    # await asyncio.sleep(0.5)
 
-                    if err_tresh == 4:
+                    # if err_tresh == 4:
                         # close openned positions after 3 errors
-                        raise CBotError('Error treshold reached in post_orders!')
+                        # raise CBotError('Error treshold reached in post_orders!')
 
             # if odate in self.dates_traded:
                 # currently not possible to distinguish positions per premium group during get positions
@@ -387,11 +386,11 @@ class Deribit_Exchange:
 
         if self.orders:
             err_tresh = 0
-            websocket = await websockets.connect(self.url)
-                
-            await self.auth(websocket)
+            # websocket = await websockets.connect(self.url)
+            async with websockets.connect(self.url) as websocket:
 
-            while True:
+                await self.auth(websocket)
+
                 try:
                     for id, order in self.orders.copy().items():
 
@@ -402,37 +401,32 @@ class Deribit_Exchange:
                             res = await self.close_position(websocket, order['instrument_name'], order['ask'])
                             self.orders.pop(id, None)
                             await asyncio.sleep(0.5)
-                    
-                    break
 
                 except Exception as E:
                     self.logger.info(f'Error in close_losing_positions: {E}')
                     self.logger.info(f'Reconnecting close_losing_positions...')
-                    err_tresh += 1
-                    websocket = await websockets.connect(self.url)
-                    await self.auth(websocket)
-                    await asyncio.sleep(0.5)
+                    # err_tresh += 1
+                    # websocket = await websockets.connect(self.url)
+                    # await self.auth(websocket)
+                    # await asyncio.sleep(0.5)
 
-                    if err_tresh == 4:
-                        raise CBotError('Error treshold reached in close_losing_positions!')
+                    # if err_tresh == 4:
+                    #     raise CBotError('Error treshold reached in close_losing_positions!')
 
     async def close_all_positions(self):
 
         if self.orders:
             err_tresh = 0
-            websocket = await websockets.connect(self.url)
-                
-            await self.auth(websocket)
+            # websocket = await websockets.connect(self.url)
+            async with websockets.connect(self.url) as websocket:
+                await self.auth(websocket)
 
-            while True:
                 try:
                     for id, order in self.orders.copy().items():
                         self.logger.info(f'Closing position {order["instrument_name"]} at price {order["ask"]}')
                         res = await self.close_position(websocket, order['instrument_name'], order['ask'])
                         self.orders.pop(id, None)
                         await asyncio.sleep(0.5)
-                    
-                    break
 
                 except Exception as E:
                     self.logger.info(f'Error in close_all_positions: {E}')
@@ -537,30 +531,30 @@ class Deribit_Exchange:
 
         self.logger.info(f'test_run')
 
-        websocket = await websockets.connect(self.url)
+        # websocket = await websockets.connect(self.url)
+        async with websockets.connect(self.url) as websocket:
+            await self.auth(websocket)
+            await asyncio.gather(
+                self.fetch_account_equity(websocket, 0.5),
+                # self.fetch_account_positions(websocket, 1),
+                self.get_index_price(websocket, 1)
+            )
 
-        await self.auth(websocket)
-        await asyncio.gather(
-            self.fetch_account_equity(websocket, 0.5),
-            # self.fetch_account_positions(websocket, 1),
-            self.get_index_price(websocket, 1)
-        )
+            order_res = await self.create_order(
+                websocket,
+                instrument_name = 'BTC-20OCT22-18000-P',
+                price = 0.0205,
+                amount = self.order_size,
+                label = '0.0205'
+            )
+            if 'order' in order_res:
+                order_det = order_res['order']
+                await asyncio.sleep(0.5)
 
-        order_res = await self.create_order(
-            websocket,
-            instrument_name = 'BTC-20OCT22-18000-P',
-            price = 0.0205,
-            amount = self.order_size,
-            label = '0.0205'
-        )
-        if 'order' in order_res:
-            order_det = order_res['order']
-            await asyncio.sleep(0.5)
-
-        await self.close_position(websocket, 'BTC-20OCT22-18000-P', 0.0255)
+            await self.close_position(websocket, 'BTC-20OCT22-18000-P', 0.0255)
 
 
-        self.logger.info(f'test_run ended!')
+            self.logger.info(f'test_run ended!')
 
     async def fetch_deribit_price_index(self) -> NoReturn:
         """Реализует логику работы бота"""
