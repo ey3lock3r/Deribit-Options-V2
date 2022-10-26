@@ -476,7 +476,10 @@ class Deribit_Exchange:
             _, odate, strike, order_type  = order['instrument_name'].split('-')
             
             if odate == self.odate:
-                lbl_prem, _ = order['label'].split(',')
+                try: 
+                    lbl_prem, _ = order['label'].split(',')
+                except Exception as E:
+                    lbl_prem = order['label']
 
                 if lbl_prem not in self.traded_prems:
                     self.traded_prems.add(lbl_prem)
@@ -565,7 +568,7 @@ class Deribit_Exchange:
         await self.auth(websocket)
         await self.fetch_account_equity(websocket)
         await self.fetch_account_positions(websocket)
-        await self.get_index_price(websocket)
+        # await self.get_index_price(websocket)
 
         await websocket.send(
             self.create_message(
