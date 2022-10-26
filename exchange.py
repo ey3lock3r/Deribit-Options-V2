@@ -340,7 +340,7 @@ class Deribit_Exchange:
                 try:
                     for idx, order in enumerate(order_list.copy()):
                         self.logger.info(f'Selling {self.order_size} amount of {order["instrument"]["instrument_name"]} at {order["bid"]} premium')
-                        strike_dist = order['instrument']['strike_dist']
+                        strike_dist = order['strike_dist']
                         order_res = await self.create_order(
                             websocket,
                             instrument_name = order['instrument']['instrument_name'],
