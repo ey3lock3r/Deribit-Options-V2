@@ -71,7 +71,7 @@ class Deribit_Exchange:
         self.asset_price = 0
         self.put_options = {}
         self.call_options = {}
-        self.equity = None
+        self.equity = 0
         self.init_price = None
         self.dates_traded = {}
         self.traded_prems = set()
