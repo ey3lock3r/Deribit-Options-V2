@@ -312,6 +312,7 @@ class Deribit_Exchange:
 
         if not self.trading: return
         if self.equity <= 0: return
+        if self.avail_funds / self.equity <= 0.2: return
 
         # order_list, premium = data
         if order_list:
@@ -364,7 +365,7 @@ class Deribit_Exchange:
 
                 except Exception as E:
                     self.logger.info(f'Error in post_orders: {E}')
-                    self.logger.info(f'Reconnecting post_orders...')
+                    # self.logger.info(f'Reconnecting post_orders...')
                     # err_tresh += 1
                     # websocket = await websockets.connect(self.url)
                     # await self.auth(websocket)
@@ -404,7 +405,7 @@ class Deribit_Exchange:
 
                 except Exception as E:
                     self.logger.info(f'Error in close_losing_positions: {E}')
-                    self.logger.info(f'Reconnecting close_losing_positions...')
+                    # self.logger.info(f'Reconnecting close_losing_positions...')
                     # err_tresh += 1
                     # websocket = await websockets.connect(self.url)
                     # await self.auth(websocket)
@@ -450,6 +451,7 @@ class Deribit_Exchange:
         await asyncio.sleep(delay)
         res = await self.get_account_summary(ws, currency=self.currency)
         self.equity = float(res['equity'])
+        self.avail_funds = float(res['available_funds'])
 
     async def fetch_account_positions(self, ws, delay = 0):
 
