@@ -76,6 +76,8 @@ class Deribit_Exchange:
         self.dates_traded = {}
         self.traded_prems = set()
         self.odate = None
+        self.prev_call_options = {}
+        self.prev_put_options = {}
         
     def create_message(self, method: str, params: dict = {},
                         mess_id: Union[int, str, None] = None,
@@ -129,6 +131,22 @@ class Deribit_Exchange:
             self.create_message(
                 'public/auth',
                 self.__credentials
+            )
+        )
+
+        return self.get_response_result(await ws.recv())
+
+    async def get_instrument(self, ws, instrument_name) -> Optional[dict]:
+        self.logger.info('get_instrument')
+
+        prop = {
+            'instrument_name': instrument_name
+        }
+
+        await ws.send(
+            self.create_message(
+                'public/get_instrument',
+                {**prop}
             )
         )
 
@@ -462,16 +480,24 @@ class Deribit_Exchange:
         await asyncio.sleep(delay)
         orders = await self.get_positions(ws, currency=self.currency)
         orders_hist = await self.get_order_history_by_currency(ws, currency=self.currency)
+        instrument = None
 
         for order in orders:
             _, odate, strike, order_type  = order['instrument_name'].split('-')
 
-            if order_type == 'P':
-                instrument = self.put_options[float(strike)]
-            else:
-                instrument = self.call_options[float(strike)]
-
             if order['realized_profit_loss'] == '0':
+                if odate == self.odate:
+                    if order_type == 'P':
+                        instrument = self.put_options[float(strike)]
+                    else:
+                        instrument = self.call_options[float(strike)]
+
+                else:
+                    if order_type == 'P':
+                        instrument = self.prev_put_options[float(strike)]
+                    else:
+                        instrument = self.prev_call_options[float(strike)]
+                
                 self.orders[order['instrument_name']] = instrument
 
         for order in orders_hist:
@@ -623,7 +649,7 @@ class Deribit_Exchange:
 
         self.logger.info('fetch_deribit_price_index listener ended..')
 
-    async def fetch_orderbook_data(self, strike: str, delay: float = 0) -> NoReturn:
+    async def fetch_orderbook_data(self, strike: str, delay: float = 0, odate: str = '') -> NoReturn:
         """Реализует логику работы бота"""
         await asyncio.sleep(delay)
         
@@ -633,16 +659,28 @@ class Deribit_Exchange:
 
         await self.auth(websocket)
 
-        # send put instrument
-        put_inst_name = self.put_options[float(strike)]['instrument_name']
+        put_inst_name = ''
+        call_inst_name = ''
+        put_options = {}
+        call_options = {}
+        if odate == '':
+            put_inst_name = self.put_options[float(strike)]['instrument_name']
+            call_inst_name = self.call_options[float(strike)]['instrument_name']
+            put_options = self.put_options
+            call_options = self.call_options
+        else:
+            put_inst_name = self.prev_put_options[float(strike)]['instrument_name']
+            call_inst_name = self.prev_call_options[float(strike)]['instrument_name']
+            put_options = self.prev_put_options
+            call_options = self.prev_call_options
+
         await websocket.send(
             self.create_message(
                 'private/subscribe',
                 { "channels": [f'ticker.{put_inst_name}.raw'] }
             )
         )
-        # send call instrument
-        call_inst_name = self.call_options[float(strike)]['instrument_name']
+        
         await websocket.send(
             self.create_message(
                 'private/subscribe',
@@ -677,9 +715,9 @@ class Deribit_Exchange:
                     _, _, strike, order_type  = data['instrument_name'].split('-')
 
                     if order_type == 'P':
-                        self.put_options[float(strike)].update(new_data)
+                        put_options[float(strike)].update(new_data)
                     else:
-                        self.call_options[float(strike)].update(new_data)
+                        call_options[float(strike)].update(new_data)
 
                     # options_dict[strike].update(new_data)
                     self.updated = True
@@ -707,6 +745,30 @@ class Deribit_Exchange:
                 await asyncio.sleep(delay)
 
         self.logger.info(f'fetch_orderbook_data: Listener for {strike} ended..')
+
+    async def prepare_prev_option_struct(self) -> NoReturn:
+
+        if not self.trading: return
+
+        self.logger.info(f'prepare_cont_option_struct')
+
+        async with websockets.connect(self.url) as websocket:
+
+            orders = await self.get_positions(websocket, currency=self.currency)
+
+            for order in orders:
+                _, odate, strike, order_type  = order['instrument_name'].split('-')
+
+                if odate != self.odate:
+                    if order['realized_profit_loss'] == '0':
+                        instrument = await self.get_instrument(websocket, order['instrument_name'])
+
+                        if order_type == 'P':
+                            self.prev_put_options[float(strike)] = instrument
+                        else:
+                            self.prev_call_options[float(strike)] = instrument
+
+
 
     async def prepare_option_struct(self) -> NoReturn:
 

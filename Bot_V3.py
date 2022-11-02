@@ -132,6 +132,7 @@ class CBot:
         tasks = []
     
         self.exchange.call_options, self.exchange.put_options = await self.exchange.prepare_option_struct()
+        await self.exchange.prepare_prev_option_struct()
 
         # tasks.append(asyncio.to_thread(self.check_riskfree_trade))
         tasks.append(asyncio.create_task(self.end_of_day()))
@@ -153,7 +154,16 @@ class CBot:
                 )
             )
             delay += 0.5
-        
+
+        for key, val in self.exchange.prev_call_options.items():
+            _, odate, _, _  = val['instrument_name'].split('-')
+            tasks.append(
+                asyncio.create_task(
+                    self.exchange.fetch_orderbook_data(key, delay=delay, odate=odate)
+                )
+            )
+            delay += 0.5
+
         # for key, val in self.exchange.put_options.items():
         #     tasks.append(
         #         asyncio.create_task(
