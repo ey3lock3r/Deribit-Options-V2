@@ -754,6 +754,8 @@ class Deribit_Exchange:
 
         async with websockets.connect(self.url) as websocket:
 
+            await self.auth(websocket)
+
             orders = await self.get_positions(websocket, currency=self.currency)
 
             for order in orders:
