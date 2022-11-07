@@ -18,10 +18,11 @@ class Deribit_Exchange:
     The business logic of the bot itself is described in the worker method."""
 
     def __init__(self, url, auth: dict, currency: str = 'ETH', env: str = 'test', trading: bool = False, order_size: float = 0.1,
-                logger: Union[logging.Logger, str, None] = None):
+                risk_perc: float = 0.003, logger: Union[logging.Logger, str, None] = None):
 
         self.currency = currency
         self.order_size = order_size
+        self.risk_perc  = risk_perc 
         self.url = url[env]
         self.__credentials = auth[env]
         self.env = env
@@ -326,14 +327,40 @@ class Deribit_Exchange:
 
         return self.get_response_result(await ws.recv())
 
+    async def get_ord_size(self):
+        # total premium (reward) = 0.008
+        # estimated loss         = 0.01
+        # diff                   = 0.002
+        # % risk 0.003
+
+        to_risk = self.avail_funds / self.risk_perc
+        to_risk -= to_risk % 0.1
+        self.order_size = max( to_risk / 0.002, 0.1)
+
+    async def check_init_margin_vs_fund(self):
+        # calc init margin for new orders (put and call): ordsize * 0.1
+        init_margin = self.order_size * 0.1 * 2
+        # calc 10% of available funds
+        fund_10perc = self.avail_funds * 0.1
+
+        # return true if not enough fund available
+        return init_margin + fund_10perc >= self.avail_funds
+
+
     async def post_orders(self, order_list):
 
         if not self.trading: return
         if self.equity <= 0: return
         if self.avail_funds / self.equity <= 0.2: return
+        
 
         # order_list, premium = data
         if order_list:
+            await self.get_ord_size()
+
+            if await self.check_init_margin_vs_fund(): return
+
+
             self.logger.info(f'post_orders')
             err_tresh = 0
 
