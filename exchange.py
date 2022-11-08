@@ -340,9 +340,13 @@ class Deribit_Exchange:
         # diff                   = 0.002
         # % risk 0.003
 
-        to_risk = self.avail_funds / self.risk_perc
+        loss = 0.015 - self.min_prem
+        
+
+        to_risk = self.avail_funds * self.risk_perc
+        to_risk /= loss
         to_risk -= to_risk % 0.1
-        self.order_size = max( to_risk / 0.002, 0.1)
+        self.order_size = max( to_risk , 0.1 )
 
     async def check_init_margin_vs_fund(self):
         # calc init margin for new orders (put and call): ordsize * 0.1
