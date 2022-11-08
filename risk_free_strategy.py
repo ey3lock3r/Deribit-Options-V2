@@ -93,9 +93,11 @@ def delta_2nd_max(data, put_options, call_options, price):
 
         if df_put.iloc[pmin]['bid'] > df_call.iloc[cmax]['bid']:
             df_put =  df_put.drop(df_put.iloc[pmin]['strike'])
-            pmin = df_put['delta'].values.argmin()
         else:
             df_call = df_call.drop(df_call.iloc[cmax]['strike'])
+            
+        if not df_put.empty and not df_call.empty:
+            pmin = df_put['delta'].values.argmin()
             cmax = df_call['delta'].values.argmax()
 
         df_put = df_put.iloc[pmin]
