@@ -80,7 +80,7 @@ class CBot:
 
                 # trade strategy
                 if self.trade_strategy:
-                    data = self.trade_strategy(self.exchange.put_options, self.exchange.call_options, price, self.exchange.order_size)
+                    data = self.trade_strategy(self.exchange.put_options, self.exchange.call_options, price, self.min_prem, self.exchange.strike_dist)
                     await self.exchange.post_orders(data)
 
                 # log strategy results for testing

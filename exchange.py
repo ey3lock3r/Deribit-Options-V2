@@ -18,11 +18,17 @@ class Deribit_Exchange:
     The business logic of the bot itself is described in the worker method."""
 
     def __init__(self, url, auth: dict, currency: str = 'ETH', env: str = 'test', trading: bool = False, order_size: float = 0.1,
-                risk_perc: float = 0.003, logger: Union[logging.Logger, str, None] = None):
+                daydelta: int = 2, risk_perc: float = 0.003, min_prem: float = 0.008, strike_dist: int = 1500,
+                logger: Union[logging.Logger, str, None] = None):
 
         self.currency = currency
         self.order_size = order_size
-        self.risk_perc  = risk_perc 
+        self.daydelta = daydelta
+        self.risk_perc = risk_perc 
+        self.min_prem = min_prem
+        self.strike_dist = strike_dist
+
+
         self.url = url[env]
         self.__credentials = auth[env]
         self.env = env
@@ -442,6 +448,7 @@ class Deribit_Exchange:
                     self.logger.info('close_losing_positions')
                     for id, order in self.orders.copy().items():
                         self.logger.info(f"type={order['option_type']} strike={order['strike']}")
+                        return # to delete
                         if (order['option_type'] == 'put' and self.asset_price <= float(order['strike'])) or \
                             (order['option_type'] == 'call' and self.asset_price >= float(order['strike'])):
                             
@@ -541,7 +548,7 @@ class Deribit_Exchange:
                 if lbl_prem not in self.traded_prems:
                     self.traded_prems.add(lbl_prem)
 
-         self.logger.info(f'There are {len(self.orders)} open positions!')
+        self.logger.info(f'There are {len(self.orders)} open positions!')
 
     async def order_mgmt_func_bk(self):
 
@@ -805,13 +812,17 @@ class Deribit_Exchange:
 
     async def prepare_option_struct(self) -> NoReturn:
 
+        daydelta = self.daydelta
+        if daydelta < 1:
+            raise CBotError(f'Daydelta value invalid: {daydelta}!')
+
         self.logger.info('prepare_option_struct')
         DAY = None
 
         if datetime.now().hour < 8 or self.env == 'test':
-            DAY = timedelta(1)          # 1 day option expiry
+            DAY = timedelta(daydelta-1)          # 1 day option expiry
         else:
-            DAY = timedelta(2)          # 2 days option expiry
+            DAY = timedelta(daydelta)          # 2 days option expiry
 
         expire_dt = date.today() + DAY
         self.logger.info(f'Today is {expire_dt}')

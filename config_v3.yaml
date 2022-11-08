@@ -8,8 +8,11 @@ exchange:
 
   env: 'prod'
   trading: true
+  daydelta: 1
   order_size: 0.1
   risk_perc: 0.003
+  min_prem: 0.005
+  strike_dist: 2000
 
   auth:
     test:

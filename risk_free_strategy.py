@@ -121,7 +121,7 @@ def selling_premiums(put_options, call_options, price):
 
     return np.array(data, dtype=str)
 
-def sell_008_premium_2k_dist(put_options, call_options, price, ord_size):
+def sell_008_premium_2k_dist(put_options, call_options, price, min_prem, strike_dist):
     data = []
     sum_premium = 0
 
@@ -143,7 +143,7 @@ def sell_008_premium_2k_dist(put_options, call_options, price, ord_size):
 
         sum_premium = df_put['bid'] + df_call['bid']
         strk_dist = abs(df_call['strike'] - df_put['strike'])
-        if sum_premium >= 0.008 and strk_dist >= 1500:
+        if sum_premium >= min_prem and strk_dist >= strike_dist:
             data.append({
                 'instrument': put_options[float(df_put['strike'])],
                 'bid': df_put['bid'],
