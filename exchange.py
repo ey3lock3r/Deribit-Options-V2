@@ -538,7 +538,7 @@ class Deribit_Exchange:
         for order in orders_hist:
             _, odate, strike, order_type  = order['instrument_name'].split('-')
             
-            if odate == self.odate:
+            if odate == self.odate and order['instrument_name'] in self.orders:
                 try: 
                     lbl_prem, _ = order['label'].split(',')
                 except Exception as E:
