@@ -438,8 +438,9 @@ class Deribit_Exchange:
                 await self.auth(websocket)
 
                 try:
+                    self.logger.info('close_losing_positions')
                     for id, order in self.orders.copy().items():
-
+                        self.logger.info(f"type={order['option_type']} strike={order['strike']}")
                         if (order['option_type'] == 'put' and self.asset_price <= order['strike']) or \
                             (order['option_type'] == 'call' and self.asset_price >= order['strike']):
                             
