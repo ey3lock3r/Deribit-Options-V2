@@ -44,6 +44,7 @@ class Deribit_Exchange:
 
         self.init_vals()
         self.logger.info(f'Bot init for {self.currency} options, tradin = {trading}')
+        self.logger.info(f'min_prem={min_prem} strike_dist={strike_dist}')
 
     @property
     def keep_alive(self) -> bool :
