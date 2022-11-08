@@ -442,8 +442,8 @@ class Deribit_Exchange:
                     self.logger.info('close_losing_positions')
                     for id, order in self.orders.copy().items():
                         self.logger.info(f"type={order['option_type']} strike={order['strike']}")
-                        if (order['option_type'] == 'put' and self.asset_price <= order['strike']) or \
-                            (order['option_type'] == 'call' and self.asset_price >= order['strike']):
+                        if (order['option_type'] == 'put' and self.asset_price <= float(order['strike'])) or \
+                            (order['option_type'] == 'call' and self.asset_price >= float(order['strike'])):
                             
                             self.logger.info(f'Closing position {order["instrument_name"]} at price {order["ask"]}')
                             res = await self.close_position(websocket, order['instrument_name'], order['ask'])
@@ -540,6 +540,8 @@ class Deribit_Exchange:
 
                 if lbl_prem not in self.traded_prems:
                     self.traded_prems.add(lbl_prem)
+
+         self.logger.info(f'There are {len(self.orders)} open positions!')
 
     async def order_mgmt_func_bk(self):
 
