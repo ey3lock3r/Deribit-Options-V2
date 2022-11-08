@@ -350,7 +350,7 @@ class Deribit_Exchange:
     async def post_orders(self, order_list):
 
         if not self.trading: return
-        if self.equity <= 0: return
+        if self.avail_funds <= 0: return
         if self.avail_funds / self.equity <= 0.2: return
         
 
