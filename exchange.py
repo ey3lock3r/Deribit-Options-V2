@@ -28,8 +28,6 @@ class Deribit_Exchange:
         self.min_prem = min_prem
         self.strike_dist = strike_dist
 
-        self.logger.info(f'min_prem={min_prem} strike_dist={strike_dist}')
-
         self.url = url[env]
         self.__credentials = auth[env]
         self.env = env
