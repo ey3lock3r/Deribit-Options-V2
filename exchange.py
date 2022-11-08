@@ -437,6 +437,8 @@ class Deribit_Exchange:
     
     async def close_losing_positions(self):
 
+        self.logger.info(f'Open positions: {len(self.orders)}')
+
         if self.orders:
             err_tresh = 0
             # websocket = await websockets.connect(self.url)
