@@ -357,14 +357,18 @@ class Deribit_Exchange:
 
         if not self.trading: return
         if self.avail_funds <= 0: return
-        if self.avail_funds / self.equity <= 0.2: return
+        if self.avail_funds / self.equity <= 0.2: 
+            self.logger.info(f'fund <= 20%')
+            return
         
 
         # order_list, premium = data
         if order_list:
             await self.get_ord_size()
 
-            if await self.check_init_margin_vs_fund(): return
+            if await self.check_init_margin_vs_fund(): 
+                self.logger.info(f'chk init margin vs fund')
+                return
 
             self.logger.info(f'post_orders')
             err_tresh = 0
