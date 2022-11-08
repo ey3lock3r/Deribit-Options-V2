@@ -519,7 +519,8 @@ class Deribit_Exchange:
 
         for order in orders:
             _, odate, strike, order_type  = order['instrument_name'].split('-')
-
+            
+            self.logger.info(f"{order['instrument_name']} : {order['realized_profit_loss']}")
             if order['realized_profit_loss'] == '0.0':
                 if odate == self.odate:
                     if order_type == 'P':
