@@ -28,6 +28,7 @@ class Deribit_Exchange:
         self.min_prem = min_prem
         self.strike_dist = strike_dist
 
+        self.logger.info(f'min_prem={min_prem} strike_dist={strike_dist}')
 
         self.url = url[env]
         self.__credentials = auth[env]
@@ -347,8 +348,8 @@ class Deribit_Exchange:
     async def check_init_margin_vs_fund(self):
         # calc init margin for new orders (put and call): ordsize * 0.1
         init_margin = self.order_size * 0.1 * 2
-        # calc 10% of available funds
-        fund_10perc = self.avail_funds * 0.1
+        # calc 5% of available funds
+        fund_10perc = self.avail_funds * 0.05
 
         # return true if not enough fund available
         return init_margin + fund_10perc >= self.avail_funds
@@ -366,7 +367,6 @@ class Deribit_Exchange:
             await self.get_ord_size()
 
             if await self.check_init_margin_vs_fund(): return
-
 
             self.logger.info(f'post_orders')
             err_tresh = 0
