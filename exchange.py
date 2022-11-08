@@ -350,6 +350,8 @@ class Deribit_Exchange:
         # calc 5% of available funds
         fund_perc = self.avail_funds * 0.05
         im_fund = init_margin + fund_perc
+
+        self.logger.info(f'order_size={self.order_size}')
         self.logger.info(f'chk init margin vs fund: {im_fund} > {self.avail_funds}')
 
         # return true if not enough fund available
