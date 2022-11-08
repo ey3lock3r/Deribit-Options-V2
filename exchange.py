@@ -361,6 +361,7 @@ class Deribit_Exchange:
             self.logger.info(f'fund <= 20%')
             return
         
+        self.logger.info(f'order_list: {len(order_list)}')
 
         # order_list, premium = data
         if order_list:
