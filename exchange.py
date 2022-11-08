@@ -446,7 +446,6 @@ class Deribit_Exchange:
 
                 try:
                     for id, order in self.orders.copy().items():
-                        self.logger.info(f"type={order['option_type']} strike={order['strike']}")
                         return # to delete
                         if (order['option_type'] == 'put' and self.asset_price <= float(order['strike'])) or \
                             (order['option_type'] == 'call' and self.asset_price >= float(order['strike'])):
