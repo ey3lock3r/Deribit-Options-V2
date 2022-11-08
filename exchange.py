@@ -348,10 +348,12 @@ class Deribit_Exchange:
         # calc init margin for new orders (put and call): ordsize * 0.1
         init_margin = self.order_size * 0.1 * 2
         # calc 5% of available funds
-        fund_10perc = self.avail_funds * 0.05
+        fund_perc = self.avail_funds * 0.05
+        im_fund = init_margin + fund_perc
+        self.logger.info(f'chk init margin vs fund: {im_fund} > {self.avail_funds}')
 
         # return true if not enough fund available
-        return init_margin + fund_10perc >= self.avail_funds
+        return im_fund >= self.avail_funds
 
 
     async def post_orders(self, order_list):
@@ -368,9 +370,7 @@ class Deribit_Exchange:
         if order_list:
             await self.get_ord_size()
 
-            if await self.check_init_margin_vs_fund(): 
-                self.logger.info(f'chk init margin vs fund')
-                return
+            if await self.check_init_margin_vs_fund(): return
 
             self.logger.info(f'post_orders')
             err_tresh = 0
