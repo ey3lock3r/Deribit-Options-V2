@@ -437,8 +437,6 @@ class Deribit_Exchange:
     
     async def close_losing_positions(self):
 
-        self.logger.info(f'Open positions: {len(self.orders)}')
-
         if self.orders:
             err_tresh = 0
             # websocket = await websockets.connect(self.url)
@@ -447,7 +445,6 @@ class Deribit_Exchange:
                 await self.auth(websocket)
 
                 try:
-                    self.logger.info('close_losing_positions')
                     for id, order in self.orders.copy().items():
                         self.logger.info(f"type={order['option_type']} strike={order['strike']}")
                         return # to delete
@@ -523,8 +520,7 @@ class Deribit_Exchange:
         for order in orders:
             _, odate, strike, order_type  = order['instrument_name'].split('-')
 
-            self.logger.info(f"{order['instrument_name']} : {order['realized_profit_loss']}")
-            if order['realized_profit_loss'] == '0':
+            if order['realized_profit_loss'] == '0.0':
                 if odate == self.odate:
                     if order_type == 'P':
                         instrument = self.put_options[float(strike)]
@@ -552,52 +548,6 @@ class Deribit_Exchange:
                     self.traded_prems.add(lbl_prem)
 
         self.logger.info(f'There are {len(self.orders)} open positions!')
-
-    async def order_mgmt_func_bk(self):
-
-        if not self.trading: return
-
-        instrument = {}
-
-        websocket = await websockets.connect(self.url)
-            
-        await self.auth(websocket)
-
-        # initialize equity
-        res = await self.get_account_summary(websocket, currency=self.currency)
-        self.equity = float(res['equity'])
-
-        orders = await self.get_positions(websocket, currency=self.currency)
-
-        for order in orders:
-            _, _, strike, order_type  = order['label'].split('-')
-
-            if order_type == 'P':
-                instrument = self.put_options[float(strike)]
-            else:
-                instrument = self.call_options[float(strike)]
-
-            self.orders[order['order_id']] = instrument
-
-        while self.keep_alive:
-            try:
-
-                for id, order in self.orders.copy().items():
-
-                    if (order['option_type'] == 'put' and self.asset_price <= order['strike']) or \
-                        (order['option_type'] == 'call' and self.asset_price >= order['strike']):
-                        
-                        await self.close_position(websocket, order['instrument_name'], order['ask'])
-                        self.orders.pop(id, None)
-                        await asyncio.sleep(0.5)
-                    
-            except Exception as E:
-                self.logger.info(f'Error in order_mgmt_func: {E}')
-                self.logger.info(f'Reconnecting order_mgmt_func...')
-                websocket = await websockets.connect(self.url)
-                await self.auth(websocket)
-
-            await asyncio.sleep(0.5)
 
     async def test_run(self) -> NoReturn:
 
