@@ -754,7 +754,7 @@ class Deribit_Exchange:
                 _, odate, strike, order_type  = order['instrument_name'].split('-')
 
                 if odate != self.odate:
-                    if order['realized_profit_loss'] == '0':
+                    if float(order['realized_profit_loss']) == 0:
                         instrument = await self.get_instrument(websocket, order['instrument_name'])
 
                         if order_type == 'P':
