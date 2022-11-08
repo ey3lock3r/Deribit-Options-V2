@@ -521,7 +521,7 @@ class Deribit_Exchange:
             _, odate, strike, order_type  = order['instrument_name'].split('-')
             
             self.logger.info(f"{order['instrument_name']} : {order['realized_profit_loss']}")
-            if order['realized_profit_loss'] == '0.0':
+            if float(order['realized_profit_loss']) == 0:
                 if odate == self.odate:
                     if order_type == 'P':
                         instrument = self.put_options[float(strike)]
