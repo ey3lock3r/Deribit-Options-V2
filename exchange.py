@@ -414,7 +414,7 @@ class Deribit_Exchange:
                         if 'order' in order_res:
                             order_det = order_res['order']
                             self.orders[order_det['instrument_name']] = order['instrument']
-                            order_list.pop(idx)
+                            # order_list.pop(idx)
                             # premiums += float(order['bid'])
                             await asyncio.sleep(0.5)
 
