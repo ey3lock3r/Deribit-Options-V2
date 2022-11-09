@@ -366,17 +366,12 @@ class Deribit_Exchange:
 
         if not self.trading: return
         if self.avail_funds <= 0: return
-        if self.avail_funds / self.equity <= 0.2: 
-            self.logger.info(f'fund <= 20%')
-            return
         
         self.logger.info(f'order_list: {len(order_list)}')
 
         # order_list, premium = data
         if order_list:
             await self.get_ord_size()
-
-            if await self.check_init_margin_vs_fund(): return
 
             self.logger.info(f'post_orders')
             err_tresh = 0
@@ -399,6 +394,14 @@ class Deribit_Exchange:
             async with websockets.connect(self.url) as websocket:
 
                 await self.auth(websocket)
+
+                await self.fetch_account_equity(websocket)
+
+                if self.avail_funds / self.equity <= 0.2: 
+                    self.logger.info(f'fund <= 20%')
+                    return
+                
+                if await self.check_init_margin_vs_fund(): return
             
                 try:
                     for idx, order in enumerate(order_list.copy()):
