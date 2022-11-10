@@ -410,8 +410,8 @@ class Deribit_Exchange:
 
                 await self.fetch_account_equity(websocket)
 
-                if self.avail_funds / self.equity <= 0.2: 
-                    self.logger.info(f'fund <= 40%')
+                if self.avail_funds / self.equity <= 0.5: 
+                    self.logger.info(f'fund <= 50%')
                     return
                 
                 if await self.check_init_margin_vs_fund(): return
