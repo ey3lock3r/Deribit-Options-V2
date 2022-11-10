@@ -199,8 +199,21 @@ class Deribit_Exchange:
             self.asset_price = price['index_price']
             self.updated = True
 
-    async def create_order(self, ws, instrument_name: str, price: float, amount: float,
-                            direction: str = 'sell', label: str = '',
+    async def create_order(self, ws, direction: str = 'sell', params: dict = {},
+                            raise_error: bool = True):
+
+        await ws.send(
+            self.create_message(
+                f'private/{direction}',
+                { **params }
+            )
+        )
+
+        return self.get_response_result(await ws.recv(), raise_error = raise_error)
+
+    async def create_order_bk(self, ws, instrument_name: str, price: float, amount: float,
+                            direction: str = 'sell', label: str = '', ord_type: str = 'limit',
+                            params: dict = {},
                             raise_error: bool = True):
 
         await ws.send(
@@ -208,7 +221,7 @@ class Deribit_Exchange:
                 f'private/{direction}',
                 { 'instrument_name' : instrument_name,
                   'amount' : amount,
-                  'type' : 'limit',
+                  'type' : ord_type,
                   'price' : price,
                   'label' : label }
             )
@@ -398,28 +411,49 @@ class Deribit_Exchange:
                 await self.fetch_account_equity(websocket)
 
                 if self.avail_funds / self.equity <= 0.2: 
-                    self.logger.info(f'fund <= 20%')
+                    self.logger.info(f'fund <= 40%')
                     return
                 
                 if await self.check_init_margin_vs_fund(): return
             
                 try:
+                    direction = ''
+
                     for idx, order in enumerate(order_list.copy()):
                         self.logger.info(f'Selling {self.order_size} amount of {order["instrument"]["instrument_name"]} at {order["bid"]} premium')
                         strike_dist = order['strike_dist']
-                        order_res = await self.create_order(
-                            websocket,
-                            instrument_name = order['instrument']['instrument_name'],
-                            price = order['bid'],
-                            amount = self.order_size,
-                            label =  f'{premium},{strike_dist}' #premium, strike distance, 
-                        )
+                        params = {
+                            'instrument_name' = order['instrument']['instrument_name'],
+                            'type'            = 'limit',
+                            'price'           = order['bid'],
+                            'amount'          = self.order_size,
+                            'label'           =  f'{premium},{strike_dist}' #premium, strike distance, 
+                        }
+                        order_res = await self.create_order(websocket, 'sell', params)
                         if 'order' in order_res:
                             order_det = order_res['order']
                             self.orders[order_det['instrument_name']] = order['instrument']
                             # order_list.pop(idx)
                             # premiums += float(order['bid'])
                             await asyncio.sleep(0.5)
+
+                            # risk management perpetual order
+                            if order['option_type'] == 'put':
+                                direction = 'sell'
+                            else:
+                                direction = 'buy'
+
+                            price = order['instrument']['strike']
+                            params = {
+                                'instrument_name' = 'BTC-PERPETUAL',
+                                'type'            = 'stop_limit',
+                                'price'           = price,
+                                'amount'          = price * 0.1 * self.order_size,
+                                'trigger'         = 'last_price',
+                                'trigger_price'   = price,
+                                'label'           =  f'{premium},{strike_dist}' #premium, strike distance, 
+                            }
+                            await self.create_order(websocket, direction, params)
 
                         else:
                             self.logger.info('Error in post_orders: Order not in order_res!')
@@ -470,14 +504,7 @@ class Deribit_Exchange:
 
                 except Exception as E:
                     self.logger.info(f'Error in close_losing_positions: {E}')
-                    # self.logger.info(f'Reconnecting close_losing_positions...')
-                    # err_tresh += 1
-                    # websocket = await websockets.connect(self.url)
-                    # await self.auth(websocket)
-                    # await asyncio.sleep(0.5)
 
-                    # if err_tresh == 4:
-                    #     raise CBotError('Error treshold reached in close_losing_positions!')
 
     async def close_all_positions(self):
 
