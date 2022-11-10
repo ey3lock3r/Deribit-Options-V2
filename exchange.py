@@ -410,8 +410,8 @@ class Deribit_Exchange:
 
                 await self.fetch_account_equity(websocket)
 
-                if self.avail_funds / self.equity <= 0.5: 
-                    self.logger.info(f'fund <= 50%')
+                if self.avail_funds / self.equity <= 0.3: 
+                    self.logger.info(f'fund <= 30%')
                     return
                 
                 if await self.check_init_margin_vs_fund(): return
@@ -493,7 +493,6 @@ class Deribit_Exchange:
 
                 try:
                     for id, order in self.orders.copy().items():
-                        return # to delete
                         if (order['option_type'] == 'put' and self.asset_price <= float(order['strike'])) or \
                             (order['option_type'] == 'call' and self.asset_price >= float(order['strike'])):
                             
@@ -654,7 +653,7 @@ class Deribit_Exchange:
 
                     self.logger.debug(f'Price index: {self.asset_price}')
 
-                    await self.close_losing_positions()
+                    # await self.close_losing_positions()
 
                     price = int(self.asset_price)
                     if price in self.put_options:
