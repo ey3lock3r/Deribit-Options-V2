@@ -423,11 +423,11 @@ class Deribit_Exchange:
                         self.logger.info(f'Selling {self.order_size} amount of {order["instrument"]["instrument_name"]} at {order["bid"]} premium')
                         strike_dist = order['strike_dist']
                         params = {
-                            'instrument_name' = order['instrument']['instrument_name'],
-                            'type'            = 'limit',
-                            'price'           = order['bid'],
-                            'amount'          = self.order_size,
-                            'label'           =  f'{premium},{strike_dist}' #premium, strike distance, 
+                            'instrument_name' : order['instrument']['instrument_name'],
+                            'type'            : 'limit',
+                            'price'           : order['bid'],
+                            'amount'          : self.order_size,
+                            'label'           :  f'{premium},{strike_dist}' #premium, strike distance, 
                         }
                         order_res = await self.create_order(websocket, 'sell', params)
                         if 'order' in order_res:
@@ -445,13 +445,13 @@ class Deribit_Exchange:
 
                             price = order['instrument']['strike']
                             params = {
-                                'instrument_name' = 'BTC-PERPETUAL',
-                                'type'            = 'stop_limit',
-                                'price'           = price,
-                                'amount'          = price * 0.1 * self.order_size,
-                                'trigger'         = 'last_price',
-                                'trigger_price'   = price,
-                                'label'           =  f'{premium},{strike_dist}' #premium, strike distance, 
+                                'instrument_name' : 'BTC-PERPETUAL',
+                                'type'            : 'stop_limit',
+                                'price'           : price,
+                                'amount'          : price * 0.1 * self.order_size,
+                                'trigger'         : 'last_price',
+                                'trigger_price'   : price,
+                                'label'           :  f'{premium},{strike_dist}' #premium, strike distance, 
                             }
                             await self.create_order(websocket, direction, params)
 
