@@ -444,11 +444,13 @@ class Deribit_Exchange:
                                 direction = 'buy'
 
                             price = order['instrument']['strike']
+                            amount = price * 0.1 * self.order_size
+                            amount -= amount % 10
                             params = {
                                 'instrument_name' : 'BTC-PERPETUAL',
                                 'type'            : 'stop_limit',
                                 'price'           : price,
-                                'amount'          : price * 0.1 * self.order_size,
+                                'amount'          : amount,
                                 'trigger'         : 'last_price',
                                 'trigger_price'   : price,
                                 'label'           :  f'{premium},{strike_dist}' #premium, strike distance, 
