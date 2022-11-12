@@ -229,6 +229,17 @@ class Deribit_Exchange:
 
         return self.get_response_result(await ws.recv(), raise_error = raise_error)
 
+    async def cancel_all(self, ws, raise_error: bool = True):
+
+        await ws.send(
+            self.create_message(
+                f'private/cancel_all',
+                {}
+            )
+        )
+
+        return self.get_response_result(await ws.recv(), raise_error = raise_error)
+
     # todo delete, not needed ?
     async def cancel_all_by_currency(self, ws, currency: str = 'BTC', kind: str = 'option',
                             raise_error: bool = True):
@@ -319,16 +330,12 @@ class Deribit_Exchange:
 
         return self.get_response_result(await ws.recv(), raise_error = raise_error)
 
-    async def close_position(self, ws, instrument_name: str, price: float, 
-                                ordtype: str = 'limit',
-                                raise_error: bool = True):
+    async def close_position(self, ws, params, raise_error: bool = True):
 
         await ws.send(
             self.create_message(
                 f'private/close_position',
-                { 'instrument_name': instrument_name,
-                  'type': ordtype, 
-                  'price': price }
+                { **params }
             )
         )
 
@@ -494,14 +501,19 @@ class Deribit_Exchange:
                 await self.auth(websocket)
 
                 try:
-                    for id, order in self.orders.copy().items():
-                        if (order['option_type'] == 'put' and self.asset_price <= float(order['strike'])) or \
-                            (order['option_type'] == 'call' and self.asset_price >= float(order['strike'])):
-                            
-                            self.logger.info(f'Closing position {order["instrument_name"]} at price {order["ask"]}')
-                            res = await self.close_position(websocket, order['instrument_name'], order['ask'])
-                            self.orders.pop(id, None)
-                            await asyncio.sleep(0.5)
+                    # for id, order in self.orders.copy().items():
+                    if (order['option_type'] == 'put' and self.asset_price <= float(order['strike'])) or \
+                        (order['option_type'] == 'call' and self.asset_price >= float(order['strike'])):
+                        
+                        # self.logger.info(f'Closing position {order["instrument_name"]} at price {order["ask"]}')
+                        params = { 
+                            'instrument_name': order['instrument_name'],
+                            'type': 'limit', 
+                            'price': order['ask'] 
+                        }
+                        res = await self.close_position(websocket, params)
+                        self.orders.pop(id, None)
+                        await asyncio.sleep(0.5)
 
                 except Exception as E:
                     self.logger.info(f'Error in close_losing_positions: {E}')
@@ -516,24 +528,22 @@ class Deribit_Exchange:
                 await self.auth(websocket)
 
                 try:
-                    for id, order in self.orders.copy().items():
-                        self.logger.info(f'Closing position {order["instrument_name"]} at price {order["ask"]}')
-                        res = await self.close_position(websocket, order['instrument_name'], order['ask'])
-                        self.orders.pop(id, None)
-                        await asyncio.sleep(0.5)
+                    # cancel all user orders and triggers on all currencies
+                    await self.cancel_all()
+                    await asyncio.sleep(0.5)
+
+                    instrument_name = 'BTC-PERPETUAL'
+                    self.logger.info(f'Closing position {instrument_name}')
+                    params = { 
+                            'instrument_name': instrument_name,
+                            'type': 'market'
+                            # 'price': order['ask'] 
+                        }
+                    await self.close_position(websocket, params, raise_error = False)
+                    await asyncio.sleep(0.5)
 
                 except Exception as E:
                     self.logger.info(f'Error in close_all_positions: {E}')
-                    self.logger.info(f'Reconnecting close_all_positions...')
-                    err_tresh += 1
-                    websocket = await websockets.connect(self.url)
-                    await self.auth(websocket)
-                    await asyncio.sleep(0.5)
-
-                    if err_tresh == 4:
-                        raise CBotError('Error treshold reached in close_all_positions!')
-
-            raise CBotError('Test cycle ended!')
 
     async def fetch_account_equity(self, ws, delay=0):
 

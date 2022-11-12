@@ -211,6 +211,9 @@ class CBot:
             
         # await asyncio.sleep( 120 - time.time() % 120 )
         self.exchange.keep_alive = False
+
+        await self.exchange.close_all_positions()
+
         self.logger.info('End of day!')
         await asyncio.sleep( 600 )  # sleep/wait for 10 minutes before starting
         
