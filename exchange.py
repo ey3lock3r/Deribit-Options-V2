@@ -398,16 +398,10 @@ class Deribit_Exchange:
 
             _, odate, _, _  = order_list[0]['instrument']['instrument_name'].split('-')
             premium = str(order_list[0]['sum_prem'])
-            # if odate in self.dates_traded:
-            #     return                      # trading done for the day
-
-            # if multiple trades
-            # currently not possible to distinguish positions per premium group during get positions
-            # for order in order_list:
-            #     tprems += float(order['bid'])
 
             # if odate in self.dates_traded:
             if premium in self.traded_prems:
+                self.logger.info(f'{sum_prem} premium already traded')
                 return
 
             # websocket = await websockets.connect(self.url)
