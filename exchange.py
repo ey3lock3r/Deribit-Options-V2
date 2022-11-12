@@ -458,7 +458,7 @@ class Deribit_Exchange:
                                 'type'            : 'stop_limit',
                                 'price'           : price,
                                 'amount'          : amount,
-                                'trigger'         : 'last_price',
+                                'trigger'         : 'mark_price',
                                 'trigger_price'   : price,
                                 'label'           :  f'{premium},{strike_dist}' #premium, strike distance, 
                             }
