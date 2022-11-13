@@ -523,7 +523,7 @@ class Deribit_Exchange:
 
                 try:
                     # cancel all user orders and triggers on all currencies
-                    await self.cancel_all()
+                    await self.cancel_all(websocket)
                     await asyncio.sleep(0.5)
 
                     instrument_name = 'BTC-PERPETUAL'
