@@ -759,6 +759,7 @@ class Deribit_Exchange:
                     self.logger.info(f'Message: {message}')
             
             except Exception as E:
+                await asyncio.sleep(delay)
                 self.logger.info(f'Reconnecting listener for {strike}')
                 websocket = await websockets.connect(self.url)
                 await self.auth(websocket)
