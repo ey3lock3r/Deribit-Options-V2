@@ -211,8 +211,11 @@ class CBot:
             
         # await asyncio.sleep( 120 - time.time() % 120 )
         self.exchange.keep_alive = False
+
+        await self.exchange.close_all_positions()
+
         self.logger.info('End of day!')
-        await asyncio.sleep( 600 )  # sleep/wait for 10 minutes before starting
+        await asyncio.sleep( 200 )  # sleep/wait for 10 minutes before starting
         
     def run(self) -> NoReturn:
         """Wrapper for start to run without additional libraries for managing asynchronous"""
@@ -236,7 +239,6 @@ class CBot:
                 self.exchange.keep_alive = False
                 self.logger.info(f'Error in run: {E}')
                 self.logger.info(traceback.print_exc())
-
 
             finally:
                 time.sleep(1)
