@@ -401,7 +401,7 @@ class Deribit_Exchange:
 
             # if odate in self.dates_traded:
             if premium in self.traded_prems:
-                self.logger.info(f'{sum_prem} premium already traded')
+                self.logger.info(f'{order_list[0]['sum_prem']} premium already traded')
                 return
 
             # websocket = await websockets.connect(self.url)
