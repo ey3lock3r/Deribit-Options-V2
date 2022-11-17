@@ -627,61 +627,60 @@ class Deribit_Exchange:
         """Реализует логику работы бота"""
         self.logger.info(f'fetch_deribit_price_index')
 
-        websocket = await websockets.connect(self.url)
+        # websocket = await websockets.connect(self.url)
 
-        await self.auth(websocket)
-        await self.fetch_account_equity(websocket)
-        await self.fetch_account_positions(websocket)
-        # await self.get_index_price(websocket)
+        first_run = True
+        async for websocket in websockets.connect(self.url):
 
-        await websocket.send(
-            self.create_message(
-                'private/subscribe',
-                { "channels": [f'deribit_price_index.{self.currency.lower()}_usd'] }
-            )
-        )
+            await self.auth(websocket)
 
-        self.logger.info(f'fetch_deribit_price_index: before while loop')
+            if first_run:
+                await self.fetch_account_equity(websocket)
+                await self.fetch_account_positions(websocket)
+                # await self.get_index_price(websocket)
+                first_run = False
 
-        data = None
-        while self.keep_alive:
-
-            try:    
-                message = self.get_response_result(await websocket.recv(), result_prop='params')
-
-                if (not message is None and
-                        ('channel' in message) and
-                        ('data' in message)):
-
-                    data = message['data']
-                    self.asset_price = data['price']
-                    self.updated = True
-
-                    self.logger.debug(f'Price index: {self.asset_price}')
-
-                    # await self.close_losing_positions()
-
-                    price = int(self.asset_price)
-                    if price in self.put_options:
-                        self.logger.info(f'ATM PUT buy price:  {self.put_options[price]["ask"]}: price: {price}')
-                        self.logger.info(f'ATM CALL buy price: {self.call_options[price]["ask"]}: price: {price}')
-
-                    # if self.asset_price >= self.init_price + 2000 or self.asset_price <= self.init_price - 2000:
-                    #     self.logger.info('Resetting bot... ')
-                    #     raise CBotError('Price moved +-2000!')
-            
-            except Exception as E:
-                self.logger.info(f'Error in fetch_deribit_price_index: {E}')
-                self.logger.info(f'Reconnecting Price listener...')
-                websocket = await websockets.connect(self.url)
-                await self.auth(websocket)
-                await websocket.send(
-                    self.create_message(
-                        'private/subscribe',
-                        { "channels": [f'deribit_price_index.{self.currency.lower()}_usd'] }
-                    )
+            await websocket.send(
+                self.create_message(
+                    'private/subscribe',
+                    { "channels": [f'deribit_price_index.{self.currency.lower()}_usd'] }
                 )
-                await asyncio.sleep(0.5)
+            )
+
+            self.logger.info(f'fetch_deribit_price_index: before while loop')
+            await asyncio.sleep(0.5)
+
+            data = None
+            while self.keep_alive:
+
+                try:    
+                    message = self.get_response_result(await websocket.recv(), result_prop='params')
+
+                    if (not message is None and
+                            ('channel' in message) and
+                            ('data' in message)):
+
+                        data = message['data']
+                        self.asset_price = data['price']
+                        self.updated = True
+
+                        self.logger.debug(f'Price index: {self.asset_price}')
+
+                        # await self.close_losing_positions()
+
+                        price = int(self.asset_price)
+                        if price in self.put_options:
+                            self.logger.info(f'ATM PUT buy price:  {self.put_options[price]["ask"]}: price: {price}')
+                            self.logger.info(f'ATM CALL buy price: {self.call_options[price]["ask"]}: price: {price}')
+
+                        # if self.asset_price >= self.init_price + 2000 or self.asset_price <= self.init_price - 2000:
+                        #     self.logger.info('Resetting bot... ')
+                        #     raise CBotError('Price moved +-2000!')
+                
+                except Exception as E:
+                    self.logger.info(f'Error in fetch_deribit_price_index: {E}')
+                    self.logger.info(f'Reconnecting Price listener...')
+                    break
 
         self.logger.info('fetch_deribit_price_index listener ended..')
 
@@ -691,10 +690,7 @@ class Deribit_Exchange:
         
         self.logger.info(f'fetch_orderbook_data: Listener for {strike} started..')
 
-        websocket = await websockets.connect(self.url)
-
-        await self.auth(websocket)
-
+        # websocket = await websockets.connect(self.url)
         put_inst_name = ''
         call_inst_name = ''
         put_options = {}
@@ -710,76 +706,66 @@ class Deribit_Exchange:
             put_options = self.prev_put_options
             call_options = self.prev_call_options
 
-        await websocket.send(
-            self.create_message(
-                'private/subscribe',
-                { "channels": [f'ticker.{put_inst_name}.raw'] }
+        async for websocket in websockets.connect(self.url):
+
+            await self.auth(websocket)
+
+            await websocket.send(
+                self.create_message(
+                    'private/subscribe',
+                    { "channels": [f'ticker.{put_inst_name}.raw'] }
+                )
             )
-        )
-        
-        await websocket.send(
-            self.create_message(
-                'private/subscribe',
-                { "channels": [f'ticker.{call_inst_name}.raw'] }
-            )
-        )
-
-        data = None
-        while self.keep_alive:
-
-            try:
-                message = self.get_response_result(await websocket.recv(), result_prop='params')
-
-                if (not message is None and
-                        ('channel' in message) and
-                        ('data' in message)):
-
-                    data = message['data']
-                    self.logger.debug(f'Option quotes: {data}')
-
-                    new_data = {
-                        'bid': data['best_bid_price'] if data['best_bid_price'] > 0 else np.nan,
-                        'bid_amt': data['best_bid_amount'],
-                        'ask': data['best_ask_price'] if data['best_ask_price'] > 0 else np.nan,
-                        'ask_amt': data['best_ask_amount'],
-                        'delta': data['greeks']['delta'],
-                        'gamma': data['greeks']['gamma'],
-                        'vega': data['greeks']['vega'],
-                        'rho': data['greeks']['rho']
-                    }
-
-                    _, _, strike, order_type  = data['instrument_name'].split('-')
-
-                    if order_type == 'P':
-                        put_options[float(strike)].update(new_data)
-                    else:
-                        call_options[float(strike)].update(new_data)
-
-                    # options_dict[strike].update(new_data)
-                    self.updated = True
-                
-                else:
-                    self.logger.info('Data not updated > ')
-                    self.logger.info(f'Message: {message}')
             
-            except Exception as E:
-                await asyncio.sleep(delay)
-                self.logger.info(f'Reconnecting listener for {strike}')
-                websocket = await websockets.connect(self.url)
-                await self.auth(websocket)
-                await websocket.send(
-                    self.create_message(
-                        'private/subscribe',
-                        { "channels": [f'ticker.{put_inst_name}.raw'] }
-                    )
+            await websocket.send(
+                self.create_message(
+                    'private/subscribe',
+                    { "channels": [f'ticker.{call_inst_name}.raw'] }
                 )
-                await websocket.send(
-                    self.create_message(
-                        'private/subscribe',
-                        { "channels": [f'ticker.{call_inst_name}.raw'] }
-                    )
-                )
-                await asyncio.sleep(delay)
+            )
+
+            data = None
+            while self.keep_alive:
+
+                try:
+                    message = self.get_response_result(await websocket.recv(), result_prop='params')
+
+                    if (not message is None and
+                            ('channel' in message) and
+                            ('data' in message)):
+
+                        data = message['data']
+                        self.logger.debug(f'Option quotes: {data}')
+
+                        new_data = {
+                            'bid': data['best_bid_price'] if data['best_bid_price'] > 0 else np.nan,
+                            'bid_amt': data['best_bid_amount'],
+                            'ask': data['best_ask_price'] if data['best_ask_price'] > 0 else np.nan,
+                            'ask_amt': data['best_ask_amount'],
+                            'delta': data['greeks']['delta'],
+                            'gamma': data['greeks']['gamma'],
+                            'vega': data['greeks']['vega'],
+                            'rho': data['greeks']['rho']
+                        }
+
+                        _, _, strike, order_type  = data['instrument_name'].split('-')
+
+                        if order_type == 'P':
+                            put_options[float(strike)].update(new_data)
+                        else:
+                            call_options[float(strike)].update(new_data)
+
+                        # options_dict[strike].update(new_data)
+                        self.updated = True
+                    
+                    else:
+                        self.logger.info('Data not updated > ')
+                        self.logger.info(f'Message: {message}')
+                
+                except Exception as E:
+                    await asyncio.sleep(delay)
+                    self.logger.info(f'Reconnecting listener for {strike}')
+                    break
 
         self.logger.info(f'fetch_orderbook_data: Listener for {strike} ended..')
 
