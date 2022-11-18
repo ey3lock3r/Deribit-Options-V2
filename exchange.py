@@ -682,6 +682,8 @@ class Deribit_Exchange:
                     self.logger.info(f'Reconnecting Price listener...')
                     break
 
+            break
+
         self.logger.info('fetch_deribit_price_index listener ended..')
 
     async def fetch_orderbook_data(self, strike: str, delay: float = 0, odate: str = '') -> NoReturn:
@@ -766,6 +768,8 @@ class Deribit_Exchange:
                     await asyncio.sleep(delay)
                     self.logger.info(f'Reconnecting listener for {strike}')
                     break
+
+            break
 
         self.logger.info(f'fetch_orderbook_data: Listener for {strike} ended..')
 
