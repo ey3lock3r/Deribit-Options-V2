@@ -636,7 +636,7 @@ class Deribit_Exchange:
 
             if first_run:
                 await self.fetch_account_equity(websocket)
-                await self.fetch_account_positions(websocket)
+                # await self.fetch_account_positions(websocket)
                 # await self.get_index_price(websocket)
                 first_run = False
 
@@ -808,21 +808,22 @@ class Deribit_Exchange:
         self.logger.info('prepare_option_struct')
         DAY = None
 
-        if datetime.now().hour < 7 or self.env == 'test':
-            DAY = timedelta(daydelta-1)          # 1 day option expiry
-        else:
-            DAY = timedelta(daydelta)          # 2 days option expiry
-
-        expire_dt = date.today() + DAY
-        self.logger.info(f'Today is {expire_dt}')
-        expire_dt = expire_dt.strftime(f"{expire_dt.day}%b%y").upper()
-        self.logger.info(f'Today is {expire_dt}')
-
-        self.odate = expire_dt
-
         async with websockets.connect(self.url) as websocket:
             
             await self.auth(websocket)
+            await self.fetch_account_positions(websocket)
+
+            if datetime.now().hour < 7 or self.env == 'test':
+                DAY = timedelta(daydelta-1)          # 1 day option expiry
+            else:
+                DAY = timedelta(daydelta)          # 2 days option expiry
+
+            expire_dt = date.today() + DAY
+            self.logger.info(f'Today is {expire_dt}')
+            expire_dt = expire_dt.strftime(f"{expire_dt.day}%b%y").upper()
+            self.logger.info(f'Today is {expire_dt}')
+
+            self.odate = expire_dt
             
             raw_instruments = await self.get_instruments(websocket)
             await self.get_index_price(websocket)
