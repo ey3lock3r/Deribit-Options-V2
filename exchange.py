@@ -75,6 +75,7 @@ class Deribit_Exchange:
         self.orders = {}
         self.keep_alive = True
         self.updated = False
+        self.pos_updated = False
         self.asset_price = 0
         self.put_options = {}
         self.call_options = {}
@@ -592,6 +593,7 @@ class Deribit_Exchange:
                 if lbl_prem not in self.traded_prems:
                     self.traded_prems.add(lbl_prem)
 
+        self.pos_updated = True
         self.logger.info(f'There are {len(self.orders)} open positions!')
 
     async def test_run(self) -> NoReturn:
@@ -636,7 +638,7 @@ class Deribit_Exchange:
 
             if first_run:
                 await self.fetch_account_equity(websocket)
-                # await self.fetch_account_positions(websocket)
+                await self.fetch_account_positions(websocket)
                 # await self.get_index_price(websocket)
                 first_run = False
 
@@ -811,7 +813,7 @@ class Deribit_Exchange:
         async with websockets.connect(self.url) as websocket:
             
             await self.auth(websocket)
-            await self.fetch_account_positions(websocket)
+            # await self.fetch_account_positions(websocket)
 
             if datetime.now().hour < 7 or self.env == 'test':
                 DAY = timedelta(daydelta-1)          # 1 day option expiry
