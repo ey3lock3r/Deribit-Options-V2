@@ -205,9 +205,9 @@ class CBot:
 
     async def end_of_day(self):
         if datetime.now().hour >= 8:
-            await asyncio.sleep( 86400 - time.time() % 86400 + 28800)   # 24hrs + 8hrs, 8am
+            await asyncio.sleep( 86400 - time.time() % 86400 + 25200)   # 24hrs + 7hrs, 7am
         else:
-            await asyncio.sleep( 28800 - time.time() % 28800)   # 8hrs, 8am
+            await asyncio.sleep( 25200 - time.time() % 25200)   # 7hrs, 7am
             
         # await asyncio.sleep( 120 - time.time() % 120 )
         self.exchange.keep_alive = False
