@@ -596,6 +596,18 @@ class Deribit_Exchange:
         self.pos_updated = True
         self.logger.info(f'There are {len(self.orders)} open positions!')
 
+    async def fetch_account_info(self) -> NoReturn:
+
+        self.logger.info(f'fetch_account_info')
+
+        async with websockets.connect(self.url) as websocket:
+            await self.auth(websocket)
+
+            await asyncio.gather(
+                self.fetch_account_equity(websocket, 0.5),
+                self.fetch_account_positions(websocket, 1)
+            )
+
     async def test_run(self) -> NoReturn:
 
         self.logger.info(f'test_run')
@@ -631,16 +643,16 @@ class Deribit_Exchange:
 
         # websocket = await websockets.connect(self.url)
 
-        first_run = True
+        # first_run = True
         async for websocket in websockets.connect(self.url):
 
             await self.auth(websocket)
 
-            if first_run:
-                await self.fetch_account_equity(websocket)
-                await self.fetch_account_positions(websocket)
+            # if first_run:
+            #     await self.fetch_account_equity(websocket)
+                # await self.fetch_account_positions(websocket)
                 # await self.get_index_price(websocket)
-                first_run = False
+                # first_run = False
 
             await websocket.send(
                 self.create_message(
@@ -813,7 +825,6 @@ class Deribit_Exchange:
         async with websockets.connect(self.url) as websocket:
             
             await self.auth(websocket)
-            # await self.fetch_account_positions(websocket)
 
             if datetime.now().hour < 7 or self.env == 'test':
                 DAY = timedelta(daydelta-1)          # 1 day option expiry
@@ -863,7 +874,7 @@ class Deribit_Exchange:
 
             if pd_inst.empty:
                 self.logger.info(f'No available options for day {expire_dt}')
-                return (None, None)
+                return #(None, None)
 
             pd_inst['bid'] = np.nan
             pd_inst['ask'] = np.nan
@@ -878,7 +889,10 @@ class Deribit_Exchange:
             call_options = pd_inst[pd_inst['option_type'] == 'call'].to_dict('index')
             put_options  = pd_inst[pd_inst['option_type'] == 'put'].to_dict('index')
 
-            return (call_options, put_options)
+            self.call_options, self.put_options = (call_options, put_options)
+            # return (call_options, put_options)
+
+            # await self.fetch_account_positions(websocket)
 
     async def grace_exit(self):
         self.logger.info('grace_exit')

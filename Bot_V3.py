@@ -71,12 +71,14 @@ class CBot:
         call_label = ['instrument_name', 'C_Strike', 'C_Premium', 'C_Delta', 'C_Gamma', 'C_Vega', 'C_Rho']
         self.logger.log(FILE, ",".join(put_label + call_label))
 
-        sum_premium = 0
+        # sum_premium = 0
         while self.exchange.keep_alive:
             self.logger.info('Checking for risk free trade...')
 
             if self.exchange.updated:
                 price = self.exchange.asset_price
+
+                
 
                 # trade strategy
                 if self.trade_strategy:
@@ -131,8 +133,10 @@ class CBot:
 
         tasks = []
     
-        self.exchange.call_options, self.exchange.put_options = await self.exchange.prepare_option_struct()
+        # self.exchange.call_options, self.exchange.put_options = await self.exchange.prepare_option_struct()
+        await self.exchange.prepare_option_struct()
         await self.exchange.prepare_prev_option_struct()
+        await self.exchange.fetch_account_info()
 
         # tasks.append(asyncio.to_thread(self.check_riskfree_trade))
         tasks.append(asyncio.create_task(self.end_of_day()))
