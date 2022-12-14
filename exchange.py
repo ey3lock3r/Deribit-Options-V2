@@ -6,7 +6,7 @@ import logging
 import numpy as np
 import pandas as pd
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import Union, Optional, NoReturn
 import websockets
 
@@ -19,6 +19,7 @@ class Deribit_Exchange:
 
     def __init__(self, url, auth: dict, currency: str = 'ETH', env: str = 'test', trading: bool = False, order_size: float = 0.1,
                 daydelta: int = 2, risk_perc: float = 0.003, min_prem: float = 0.008, strike_dist: int = 1500,
+                l_min_prem: float = 0.004, l_strike_dist: int = 1000,
                 logger: Union[logging.Logger, str, None] = None):
 
         self.currency = currency
@@ -27,6 +28,8 @@ class Deribit_Exchange:
         self.risk_perc = risk_perc 
         self.min_prem = min_prem
         self.strike_dist = strike_dist
+        self.l_min_prem = l_min_prem
+        self.l_strike_dist = l_strike_dist
 
         self.url = url[env]
         self.__credentials = auth[env]
@@ -398,9 +401,18 @@ class Deribit_Exchange:
             err_tresh = 0
 
             _, odate, _, _  = order_list[0]['instrument']['instrument_name'].split('-')
-            premium = str(order_list[0]['sum_prem'])
+            premium = order_list[0]['sum_prem']
+            prem_disp = premium
 
-            # if odate in self.dates_traded:
+            if premium < self.min_prem:
+                premium = 0
+
+            if (premium > 0 and (premium < self.min_prem or order['strike_dist'] < self.strike_dist)) or \
+                (premium == 0 and (prem_disp < self.l_min_prem or order['strike_dist'] < self.l_strike_dist)):
+                return
+
+            premium = str(premium)
+
             if premium in self.traded_prems:
                 self.logger.info(f'{premium} premium already traded')
                 return
@@ -422,6 +434,7 @@ class Deribit_Exchange:
                     direction = ''
 
                     for idx, order in enumerate(order_list.copy()):
+
                         self.logger.info(f'Selling {self.order_size} amount of {order["instrument"]["instrument_name"]} at {order["bid"]} premium')
                         strike_dist = order['strike_dist']
                         params = {
@@ -429,7 +442,7 @@ class Deribit_Exchange:
                             'type'            : 'limit',
                             'price'           : order['bid'],
                             'amount'          : self.order_size,
-                            'label'           :  f'{premium},{strike_dist}' #premium, strike distance, 
+                            'label'           :  f'{prem_disp},{strike_dist}' #premium, strike distance, 
                         }
                         order_res = await self.create_order(websocket, 'sell', params)
                         if 'order' in order_res:
@@ -447,7 +460,7 @@ class Deribit_Exchange:
 
                             price = order['instrument']['strike']
                             amount = price * 0.1 * self.order_size
-                            amount -= amount % 10
+                            amount -= amount % 10 + 10
                             params = {
                                 'instrument_name' : 'BTC-PERPETUAL',
                                 'type'            : 'stop_limit',
@@ -455,7 +468,7 @@ class Deribit_Exchange:
                                 'amount'          : amount,
                                 'trigger'         : 'mark_price',
                                 'trigger_price'   : price,
-                                'label'           :  f'{premium},{strike_dist}' #premium, strike distance, 
+                                'label'           :  f'{prem_disp},{strike_dist}' #premium, strike distance, 
                             }
                             await self.create_order(websocket, direction, params)
 
@@ -826,7 +839,7 @@ class Deribit_Exchange:
             
             await self.auth(websocket)
 
-            if datetime.now().hour < 7 or self.env == 'test':
+            if datetime.now(timezone.utc).hour < 7 or self.env == 'test':
                 DAY = timedelta(daydelta-1)          # 1 day option expiry
             else:
                 DAY = timedelta(daydelta)          # 2 days option expiry

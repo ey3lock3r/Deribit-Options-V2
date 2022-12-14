@@ -7,7 +7,7 @@ import logging
 import pandas as pd
 import traceback
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Union, Optional, NoReturn
 from exceptions import CBotError
 
@@ -212,7 +212,7 @@ class CBot:
         while self.exchange.pos_updated == False:
             await asyncio.sleep( 1 )
 
-        if datetime.now().hour < 7:
+        if datetime.now(timezone.utc).hour < 7:
             await asyncio.sleep( 25200 - time.time() % 25200)   # 7hrs, 7am
         else:
             await asyncio.sleep( 86400 - time.time() % 86400 + 25200)   # 24hrs + 7hrs, 7am

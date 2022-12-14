@@ -30,7 +30,7 @@ import pandas as pd
 # print(f'Today is {expire_dt}')
 
 import asyncio
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta, datetime, timezone
 import time
 
-print(datetime.now().hour)
+print(datetime.now(timezone.utc).hour)
