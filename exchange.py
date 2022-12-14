@@ -18,8 +18,7 @@ class Deribit_Exchange:
     The business logic of the bot itself is described in the worker method."""
 
     def __init__(self, url, auth: dict, currency: str = 'ETH', env: str = 'test', trading: bool = False, order_size: float = 0.1,
-                daydelta: int = 2, risk_perc: float = 0.003, min_prem: float = 0.008, strike_dist: int = 1500,
-                l_min_prem: float = 0.004, l_strike_dist: int = 1000, expire_time: int = 7,
+                daydelta: int = 2, risk_perc: float = 0.003, min_prem: float = 0.008, strike_dist: int = 1500, expire_time: int = 7,
                 logger: Union[logging.Logger, str, None] = None):
 
         self.currency = currency
@@ -28,8 +27,6 @@ class Deribit_Exchange:
         self.risk_perc = risk_perc 
         self.min_prem = min_prem
         self.strike_dist = strike_dist
-        self.l_min_prem = l_min_prem
-        self.l_strike_dist = l_strike_dist
         self.expire_time = expire_time
 
         self.url = url[env]
@@ -88,6 +85,7 @@ class Deribit_Exchange:
         self.init_price = None
         self.dates_traded = {}
         self.traded_prems = set()
+        self.max_traded_prem = 0.0
         self.odate = None
         self.prev_call_options = {}
         self.prev_put_options = {}
@@ -406,12 +404,12 @@ class Deribit_Exchange:
             strk_dist = order_list[0]['strike_dist']
             prem_disp = premium
 
-            if premium < self.min_prem:
-                premium = 0
+            # if premium < self.min_prem and len(self.traded_prems) == 0:
+            #     premium = 0
 
-            if (premium > 0 and (premium < self.min_prem or strk_dist < self.strike_dist)) or \
-                (premium == 0 and (prem_disp < self.l_min_prem or strk_dist < self.l_strike_dist)):
-                return
+            if (premium < self.min_prem or strk_dist <= self.strike_dist) and \
+                premium <= self.max_traded_prem:
+                return 
 
             premium = str(premium)
 
@@ -500,6 +498,7 @@ class Deribit_Exchange:
             
             # else:
             self.traded_prems.add(premium)
+            self.max_traded_prem = float(premium)
     
     async def close_losing_positions(self):
 
@@ -604,6 +603,9 @@ class Deribit_Exchange:
                     lbl_prem, _ = order['label'].split(',')
                 except Exception as E:
                     lbl_prem = order['label']
+
+                if float(lbl_prem) > self.max_traded_prem:
+                    self.max_traded_prem = float(lbl_prem)
 
                 if lbl_prem not in self.traded_prems:
                     self.traded_prems.add(lbl_prem)
