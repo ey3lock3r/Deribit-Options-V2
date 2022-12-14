@@ -403,13 +403,14 @@ class Deribit_Exchange:
 
             _, odate, _, _  = order_list[0]['instrument']['instrument_name'].split('-')
             premium = order_list[0]['sum_prem']
+            strk_dist = order_list[0]['strike_dist']
             prem_disp = premium
 
             if premium < self.min_prem:
                 premium = 0
 
-            if (premium > 0 and (premium < self.min_prem or order['strike_dist'] < self.strike_dist)) or \
-                (premium == 0 and (prem_disp < self.l_min_prem or order['strike_dist'] < self.l_strike_dist)):
+            if (premium > 0 and (premium < self.min_prem or strk_dist < self.strike_dist)) or \
+                (premium == 0 and (prem_disp < self.l_min_prem or strk_dist < self.l_strike_dist)):
                 return
 
             premium = str(premium)
