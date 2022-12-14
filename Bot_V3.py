@@ -212,13 +212,13 @@ class CBot:
         while self.exchange.pos_updated == False:
             await asyncio.sleep( 1 )
 
-        if datetime.now(timezone.utc).hour < 7:
-            await asyncio.sleep( 25200 - time.time() % 25200)   # 7hrs, 7am
+        if datetime.now(timezone.utc).hour < self.exchange.expire_time:
+            await asyncio.sleep( 21600 - int(datetime.now(timezone.utc).timestamp()) % 21600)   # 6hrs, 6am
         else:
-            await asyncio.sleep( 86400 - time.time() % 86400 + 25200)   # 24hrs + 7hrs, 7am
+            await asyncio.sleep( 86400 - int(datetime.now(timezone.utc).timestamp()) % 86400 + 21600)   # 24hrs + 6hrs, 6am
 
         if len(self.exchange.orders) > 0:
-            await asyncio.sleep( 3600 )   # + 1hr, 8am
+            await asyncio.sleep( 28800 - int(datetime.now(timezone.utc).timestamp()) % 28800 )   # 8am
             
         # await asyncio.sleep( 120 - time.time() % 120 )
         self.exchange.keep_alive = False

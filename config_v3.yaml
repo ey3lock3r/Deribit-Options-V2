@@ -15,6 +15,7 @@ exchange:
   strike_dist: 1500
   l_min_prem: 0.004
   l_strike_dist: 1000
+  expire_time: 6
 
   auth:
     test:

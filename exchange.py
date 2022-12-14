@@ -19,7 +19,7 @@ class Deribit_Exchange:
 
     def __init__(self, url, auth: dict, currency: str = 'ETH', env: str = 'test', trading: bool = False, order_size: float = 0.1,
                 daydelta: int = 2, risk_perc: float = 0.003, min_prem: float = 0.008, strike_dist: int = 1500,
-                l_min_prem: float = 0.004, l_strike_dist: int = 1000,
+                l_min_prem: float = 0.004, l_strike_dist: int = 1000, expire_time: int = 7,
                 logger: Union[logging.Logger, str, None] = None):
 
         self.currency = currency
@@ -30,6 +30,7 @@ class Deribit_Exchange:
         self.strike_dist = strike_dist
         self.l_min_prem = l_min_prem
         self.l_strike_dist = l_strike_dist
+        self.expire_time = expire_time
 
         self.url = url[env]
         self.__credentials = auth[env]
@@ -839,7 +840,7 @@ class Deribit_Exchange:
             
             await self.auth(websocket)
 
-            if datetime.now(timezone.utc).hour < 7 or self.env == 'test':
+            if datetime.now(timezone.utc).hour < self.expire_time or self.env == 'test':
                 DAY = timedelta(daydelta-1)          # 1 day option expiry
             else:
                 DAY = timedelta(daydelta)          # 2 days option expiry

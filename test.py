@@ -34,3 +34,5 @@ from datetime import date, timedelta, datetime, timezone
 import time
 
 print(datetime.now(timezone.utc).hour)
+print(int(datetime.now(timezone.utc).timestamp()))
+print(int(time.time()))
