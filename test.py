@@ -36,3 +36,5 @@ import time
 print(datetime.now(timezone.utc).hour)
 print(int(datetime.now(timezone.utc).timestamp()))
 print(int(time.time()))
+x = np.nan
+print(np.isnan(x+0.005))

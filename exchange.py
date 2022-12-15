@@ -406,6 +406,9 @@ class Deribit_Exchange:
 
             # if premium < self.min_prem and len(self.traded_prems) == 0:
             #     premium = 0
+            if np.isnan(premium):
+                self.logger.info(f'Premium is {premium}')
+                return
 
             if premium < self.min_prem or strk_dist <= self.strike_dist or \
                 premium <= self.max_traded_prem:
