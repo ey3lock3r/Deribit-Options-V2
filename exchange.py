@@ -413,7 +413,8 @@ class Deribit_Exchange:
             if premium < self.min_prem or strk_dist <= self.strike_dist or \
                 premium <= self.max_traded_prem:
                 self.logger.info(f'Premium {premium} < {self.min_prem}, {self.max_traded_prem} or Strike Dist {strk_dist} <= {self.strike_dist}')
-                return 
+                premium = 0
+                # return 
 
             premium = str(premium)
 
@@ -716,8 +717,9 @@ class Deribit_Exchange:
                     self.logger.info(f'Error in fetch_deribit_price_index: {E}')
                     self.logger.info(f'Reconnecting Price listener...')
                     break
-
-            break
+            
+            if not self.keep_alive:
+                break
 
         self.logger.info('fetch_deribit_price_index listener ended..')
 
@@ -804,7 +806,8 @@ class Deribit_Exchange:
                     self.logger.info(f'Reconnecting listener for {strike}')
                     break
 
-            break
+            if not self.keep_alive:
+                break
 
         self.logger.info(f'fetch_orderbook_data: Listener for {strike} ended..')
 
