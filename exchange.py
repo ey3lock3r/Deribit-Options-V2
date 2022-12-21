@@ -399,7 +399,7 @@ class Deribit_Exchange:
             self.logger.info(f'post_orders')
             err_tresh = 0
 
-            _, odate, _, _  = order_list[0]['instrument']['instrument_name'].split('-')
+            _, odate, strike, _  = order_list[0]['instrument']['instrument_name'].split('-')
             premium = order_list[0]['sum_prem']
             strk_dist = order_list[0]['strike_dist']
             prem_disp = premium
@@ -429,17 +429,22 @@ class Deribit_Exchange:
 
                 await self.fetch_account_equity(websocket)
 
+                # update equity
+                # res = await self.get_account_summary(websocket, currency=self.currency)
+                # self.equity = float(res['equity'])
+
                 if self.avail_funds / self.equity <= 0.3: 
                     self.logger.info(f'fund <= 30%')
                     return
                 
                 if await self.check_init_margin_vs_fund(): return
             
-                try:
-                    direction = ''
+                # try:
+                direction = ''
 
-                    for idx, order in enumerate(order_list.copy()):
+                for idx, order in enumerate(order_list.copy()):
 
+                    try:
                         self.logger.info(f'Selling {self.order_size} amount of {order["instrument"]["instrument_name"]} at {order["bid"]} premium')
                         strike_dist = order['strike_dist']
                         params = {
@@ -475,31 +480,14 @@ class Deribit_Exchange:
                                 'trigger_price'   : price,
                                 'label'           :  f'{prem_disp},{strike_dist}' #premium, strike distance, 
                             }
+                            self.logger.info(f'Selling {amount} amount of BTC-PERPETUAL at {price} price')
                             await self.create_order(websocket, direction, params)
 
                         else:
                             self.logger.info('Error in post_orders: Order not in order_res!')
 
-                    # update equity
-                    res = await self.get_account_summary(websocket, currency=self.currency)
-                    self.equity = float(res['equity'])
-
-                except Exception as E:
-                    self.logger.info(f'Error in post_orders: {E}')
-                    # self.logger.info(f'Reconnecting post_orders...')
-                    # err_tresh += 1
-                    # websocket = await websockets.connect(self.url)
-                    # await self.auth(websocket)
-                    # await asyncio.sleep(0.5)
-
-                    # if err_tresh == 4:
-                        # close openned positions after 3 errors
-                        # raise CBotError('Error treshold reached in post_orders!')
-
-            # if odate in self.dates_traded:
-                # currently not possible to distinguish positions per premium group during get positions
-                # if premium not in self.dates_traded[odate]:  
-                # self.dates_traded[odate].add(premium)
+                    except Exception as E:
+                        self.logger.info(f'Error in post_orders: {E}')
             
             # else:
             self.traded_prems.add(premium)

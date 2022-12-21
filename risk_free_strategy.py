@@ -146,6 +146,10 @@ def sell_008_premium_2k_dist(put_options, call_options, price, min_prem, strike_
         sum_premium = df_put['bid'] + df_call['bid']
         strk_dist = abs(df_call['strike'] - df_put['strike'])
         # if sum_premium >= min_prem and strk_dist >= strike_dist:
+
+        if df_put['strike'] > price or df_call['strike'] < price:
+            return data
+
         data.append({
             'instrument': put_options[float(df_put['strike'])],
             'bid': df_put['bid'],
