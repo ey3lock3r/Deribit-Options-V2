@@ -427,8 +427,6 @@ class Deribit_Exchange:
             #     self.logger.info(f'')
             #     return
 
-            premium = str(premium)
-
             # allow all trades when low volatility and time between 0-exp time
             if self.dvol < self.dvol_thres and \
                 datetime.now(timezone.utc).hour < self.expire_time:
@@ -439,9 +437,11 @@ class Deribit_Exchange:
                     self.logger.info(f'{premium} premium < {self.max_traded_prem} max traded prem')
                     return
 
-                if premium in self.traded_prems:
+                if str(premium) in self.traded_prems:
                     self.logger.info(f'{premium} premium already traded')
                     return
+
+            premium = str(premium)
 
             # websocket = await websockets.connect(self.url)
             async with websockets.connect(self.url) as websocket:
