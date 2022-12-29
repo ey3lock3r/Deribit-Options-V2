@@ -435,6 +435,9 @@ class Deribit_Exchange:
                 pass
 
             else:
+                if premium <= self.max_traded_prem:
+                    self.logger.info(f'{premium} premium < {self.max_traded_prem} max traded prem')
+                    return
 
                 if premium in self.traded_prems:
                     self.logger.info(f'{premium} premium already traded')
