@@ -19,6 +19,7 @@ class Deribit_Exchange:
 
     def __init__(self, url, auth: dict, currency: str = 'ETH', env: str = 'test', trading: bool = False, order_size: float = 0.1,
                 daydelta: int = 2, risk_perc: float = 0.003, min_prem: float = 0.008, strike_dist: int = 1500, expire_time: int = 7,
+                dvol_thres: float = 65.0,
                 logger: Union[logging.Logger, str, None] = None):
 
         self.currency = currency
@@ -28,6 +29,7 @@ class Deribit_Exchange:
         self.min_prem = min_prem
         self.strike_dist = strike_dist
         self.expire_time = expire_time
+        self.dvol_thres = dvol_thres
 
         self.url = url[env]
         self.__credentials = auth[env]
@@ -82,7 +84,7 @@ class Deribit_Exchange:
         self.call_options = {}
         self.equity = 0
         self.avail_funds = 0
-        self.init_price = None
+        self.dvol = 0
         self.dates_traded = {}
         self.traded_prems = set()
         self.max_traded_prem = 0.0
@@ -198,7 +200,7 @@ class Deribit_Exchange:
 
         price = self.get_response_result(await ws.recv())
         if 'index_price' in price:
-            self.init_price = price['index_price']
+            # self.init_price = price['index_price']
             self.asset_price = price['index_price']
             self.updated = True
 
@@ -410,17 +412,33 @@ class Deribit_Exchange:
                 self.logger.info(f'Premium is {premium}')
                 return
 
-            if premium < self.min_prem or strk_dist <= self.strike_dist or \
-                premium <= self.max_traded_prem:
+            if premium < self.min_prem or          \
+                premium <= self.max_traded_prem or \
+                strk_dist <= self.strike_dist: # or   \
+                # self.dvol < self.dvol_thres:
+                
                 self.logger.info(f'Premium {premium} < {self.min_prem}, {self.max_traded_prem} or Strike Dist {strk_dist} <= {self.strike_dist}')
-                premium = 0
+                # premium = 0
                 # return 
+
+            # if self.dvol >= self.dvol_thres and \
+            #     datetime.now(timezone.utc).hour >= self.expire_time and \
+            #     premium == 0:
+            #     self.logger.info(f'')
+            #     return
 
             premium = str(premium)
 
-            if premium in self.traded_prems:
-                self.logger.info(f'{premium} premium already traded')
-                return
+            # allow all trades when low volatility and time between 0-exp time
+            if self.dvol < self.dvol_thres and \
+                datetime.now(timezone.utc).hour < self.expire_time:
+                pass
+
+            else:
+
+                if premium in self.traded_prems:
+                    self.logger.info(f'{premium} premium already traded')
+                    return
 
             # websocket = await websockets.connect(self.url)
             async with websockets.connect(self.url) as websocket:
@@ -710,6 +728,49 @@ class Deribit_Exchange:
                 break
 
         self.logger.info('fetch_deribit_price_index listener ended..')
+
+    async def fetch_dvol_index(self) -> NoReturn:
+        """Реализует логику работы бота"""
+        self.logger.info(f'fetch_dvol_index')
+
+        async for websocket in websockets.connect(self.url):
+
+            await self.auth(websocket)
+
+            await websocket.send(
+                self.create_message(
+                    'private/subscribe',
+                    { "channels": [f'deribit_volatility_index.{self.currency.lower()}_usd'] }
+                )
+            )
+
+            self.logger.info(f'fetch_dvol_index: before while loop')
+            await asyncio.sleep(0.5)
+
+            data = None
+            while self.keep_alive:
+
+                try:    
+                    message = self.get_response_result(await websocket.recv(), result_prop='params')
+
+                    if (not message is None and
+                            ('channel' in message) and
+                            ('data' in message)):
+
+                        data = message['data']
+                        self.dvol = data['volatility']
+
+                        self.logger.debug(f'DVOL index: {self.dvol}')
+                
+                except Exception as E:
+                    self.logger.info(f'Error in fetch_dvol_index: {E}')
+                    self.logger.info(f'Reconnecting DVOL listener...')
+                    break
+            
+            if not self.keep_alive:
+                break
+
+        self.logger.info('fetch_dvol_index listener ended..')
 
     async def fetch_orderbook_data(self, strike: str, delay: float = 0, odate: str = '') -> NoReturn:
         """Реализует логику работы бота"""

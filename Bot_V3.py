@@ -141,6 +141,7 @@ class CBot:
         # tasks.append(asyncio.to_thread(self.check_riskfree_trade))
         tasks.append(asyncio.create_task(self.end_of_day()))
         tasks.append(asyncio.create_task(self.exchange.fetch_deribit_price_index()))
+        tasks.append(asyncio.create_task(self.exchange.fetch_dvol_index()))
         # tasks.append(asyncio.create_task(self.exchange.order_mgmt_func(self.interval)))
         tasks.append(asyncio.create_task(self.check_riskfree_trade()))
 
