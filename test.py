@@ -29,12 +29,13 @@ import pandas as pd
 # expire_dt = expire_dt.strftime(f"{expire_dt.day}%b%y").upper()
 # print(f'Today is {expire_dt}')
 
-import asyncio
-from datetime import date, timedelta, datetime, timezone
-import time
+# import asyncio
+# from datetime import date, timedelta, datetime, timezone
+# import time
 
-print(datetime.now(timezone.utc).hour)
-print(int(datetime.now(timezone.utc).timestamp()))
-print(int(time.time()))
-x = np.nan
-print(np.isnan(x+0.005))
+# print(datetime.now(timezone.utc).hour)
+# print(int(datetime.now(timezone.utc).timestamp()))
+# print(int(time.time()))
+# x = np.nan
+# print(np.isnan(x+0.005))
+print(-0.08 >= -0.2)
