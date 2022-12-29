@@ -434,7 +434,7 @@ class Deribit_Exchange:
 
             else:
                 if premium <= self.max_traded_prem:
-                    self.logger.info(f'{premium} premium < {self.max_traded_prem} max traded prem')
+                    self.logger.info(f'{premium} premium <= {self.max_traded_prem} max traded prem')
                     return
 
                 if str(premium) in self.traded_prems:
