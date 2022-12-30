@@ -428,7 +428,7 @@ class Deribit_Exchange:
             #     return
 
             # allow all trades when low volatility and time between 0-exp time
-            if self.dvol < self.dvol_thres # and \
+            if self.dvol < self.dvol_thres: # and \
                 # datetime.now(timezone.utc).hour < self.expire_time:
                 pass
 
