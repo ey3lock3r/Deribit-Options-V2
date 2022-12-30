@@ -445,7 +445,7 @@ class Deribit_Exchange:
                 # self.equity = float(res['equity'])
 
                 if self.avail_funds / self.equity <= 0.3: 
-                    self.logger.info(f'fund <= 30%')
+                    self.logger.info(f'Available fund {self.avail_funds} / {self.equity} equity <= 30%')
                     return
                 
                 if await self.check_init_margin_vs_fund(): return
