@@ -557,6 +557,8 @@ class Deribit_Exchange:
 
                 except Exception as E:
                     self.logger.info(f'Error in close_all_positions: {E}')
+            
+            self.logger.info('All positions closed!')
 
     async def fetch_account_equity(self, ws, delay=0):
 

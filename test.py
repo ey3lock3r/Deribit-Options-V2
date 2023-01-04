@@ -38,4 +38,6 @@ import pandas as pd
 # print(int(time.time()))
 # x = np.nan
 # print(np.isnan(x+0.005))
-print(-0.08 >= -0.2)
+
+from web3 import Web3
+from web3.middleware import geth_poa_middleware
