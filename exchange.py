@@ -553,7 +553,7 @@ class Deribit_Exchange:
                             # 'price': order['ask'] 
                         }
                     await self.close_position(websocket, params, raise_error = False)
-                    await asyncio.sleep(0.5)
+                    await asyncio.sleep(1)
 
                 except Exception as E:
                     self.logger.info(f'Error in close_all_positions: {E}')
