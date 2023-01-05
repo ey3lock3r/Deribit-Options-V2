@@ -368,7 +368,8 @@ class Deribit_Exchange:
         loss = 0.015 - self.min_prem
         
 
-        to_risk = self.avail_funds * self.risk_perc
+        # to_risk = self.avail_funds * self.risk_perc
+        to_risk = self.equity * self.risk_perc
         to_risk /= loss
         to_risk -= to_risk % 0.1
         to_risk = np.round(to_risk, 1)
@@ -445,8 +446,8 @@ class Deribit_Exchange:
                 # res = await self.get_account_summary(websocket, currency=self.currency)
                 # self.equity = float(res['equity'])
 
-                if self.avail_funds / self.equity <= 0.5: 
-                    self.logger.info(f'Available fund {self.avail_funds} / {self.equity} equity <= 50%')
+                if self.avail_funds / self.equity <= 0.47: 
+                    self.logger.info(f'Available fund {self.avail_funds} / {self.equity} equity <= 47%')
                     return
                 
                 if await self.check_init_margin_vs_fund(): return
