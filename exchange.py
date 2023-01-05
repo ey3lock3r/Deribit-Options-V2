@@ -371,6 +371,7 @@ class Deribit_Exchange:
         to_risk = self.avail_funds * self.risk_perc
         to_risk /= loss
         to_risk -= to_risk % 0.1
+        to_risk = np.round(to_risk, 1)
         self.order_size = max( to_risk , 0.1 )
 
     async def check_init_margin_vs_fund(self):
