@@ -454,7 +454,7 @@ class Deribit_Exchange:
             
                 # try:
                 direction = ''
-                call_strike = order_list[0]['call_strike']
+                call_strike = float(order_list[0]['call_strike'])
                 amount = call_strike * 0.1 * self.order_size
                 amount -= amount % 10 + 10
 
