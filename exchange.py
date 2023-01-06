@@ -425,9 +425,9 @@ class Deribit_Exchange:
                     self.logger.info(f'Premium {premium} < {self.min_prem} or Strike Dist {strk_dist} <= {self.strike_dist}')
                     return
 
-                if premium <= self.max_traded_prem:
-                    self.logger.info(f'{premium} premium <= {self.max_traded_prem} max traded prem')
-                    return
+                # if premium <= self.max_traded_prem:
+                #     self.logger.info(f'{premium} premium <= {self.max_traded_prem} max traded prem')
+                #     return
 
                 if str(premium) in self.traded_prems:
                     self.logger.info(f'{premium} premium already traded')
