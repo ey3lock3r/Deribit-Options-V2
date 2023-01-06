@@ -454,6 +454,9 @@ class Deribit_Exchange:
             
                 # try:
                 direction = ''
+                call_strike = order_list[0]['call_strike']
+                amount = call_strike * 0.1 * self.order_size
+                amount -= amount % 10 + 10
 
                 for idx, order in enumerate(order_list.copy()):
 
@@ -482,8 +485,8 @@ class Deribit_Exchange:
                                 direction = 'buy'
 
                             price = order['instrument']['strike']
-                            amount = price * 0.1 * self.order_size
-                            amount -= amount % 10 + 10
+                            # amount = price * 0.1 * self.order_size
+                            # amount -= amount % 10 + 10
                             params = {
                                 'instrument_name' : 'BTC-PERPETUAL',
                                 'type'            : 'stop_limit',
