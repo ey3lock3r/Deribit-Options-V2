@@ -479,11 +479,11 @@ class Deribit_Exchange:
                             await asyncio.sleep(0.5)
 
                             # risk management perpetual order
-                            if order['option_type'] == 'put':
-                                direction = 'sell'
-                            else:
-                                direction = 'buy'
-
+                            # if order['option_type'] == 'put':
+                            #     direction = 'sell'
+                            # else:
+                            #     direction = 'buy'
+                            direction = order['direction']
                             price = order['instrument']['strike']
                             # amount = price * 0.1 * self.order_size
                             # amount -= amount % 10 + 10
