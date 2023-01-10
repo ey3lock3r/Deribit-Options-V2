@@ -19,7 +19,7 @@ class Deribit_Exchange:
 
     def __init__(self, url, auth: dict, currency: str = 'ETH', env: str = 'test', trading: bool = False, order_size: float = 0.1,
                 daydelta: int = 2, risk_perc: float = 0.003, min_prem: float = 0.008, strike_dist: int = 1500, expire_time: int = 7,
-                dvol_thres: float = 65.0,
+                dvol_thres: float = 65.0, default_prems = None,
                 logger: Union[logging.Logger, str, None] = None):
 
         self.currency = currency
@@ -30,6 +30,7 @@ class Deribit_Exchange:
         self.strike_dist = strike_dist
         self.expire_time = expire_time
         self.dvol_thres = dvol_thres
+        self.default_prems = default_prems
 
         self.url = url[env]
         self.__credentials = auth[env]
@@ -138,12 +139,16 @@ class Deribit_Exchange:
         return None
 
 
-    async def auth(self, ws) -> Optional[dict]:
+    async def auth(self, ws, creds=None) -> Optional[dict]:
+
+        if creds is None:
+            creds = self.__credentials
 
         await ws.send(
             self.create_message(
                 'public/auth',
-                self.__credentials
+                creds
+                # self.__credentials
             )
         )
 
@@ -402,6 +407,7 @@ class Deribit_Exchange:
 
             self.logger.info(f'post_orders')
             err_tresh = 0
+            bid_ask = 'bid'
 
             _, odate, strike, _  = order_list[0]['instrument']['instrument_name'].split('-')
             premium = order_list[0]['sum_prem']
@@ -417,6 +423,7 @@ class Deribit_Exchange:
             # allow all trades when low volatility and time between 0-exp time
             if self.dvol < self.dvol_thres: # and \
                 # datetime.now(timezone.utc).hour < self.expire_time:
+                bid_ask = 'ask'
                 pass
 
             else:
@@ -466,7 +473,7 @@ class Deribit_Exchange:
                         params = {
                             'instrument_name' : order['instrument']['instrument_name'],
                             'type'            : 'limit',
-                            'price'           : order['bid'],
+                            'price'           : order[bid_ask],
                             'amount'          : self.order_size,
                             'label'           :  f'{prem_disp},{strike_dist}' #premium, strike distance, 
                         }
