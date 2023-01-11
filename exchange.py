@@ -562,7 +562,6 @@ class Deribit_Exchange:
                     params = { 
                             'instrument_name': instrument_name,
                             'type': 'market'
-                            # 'price': order['ask'] 
                         }
                     await self.close_position(websocket, params, raise_error = False)
                     await asyncio.sleep(1)
