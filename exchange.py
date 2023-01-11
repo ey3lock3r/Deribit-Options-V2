@@ -465,15 +465,21 @@ class Deribit_Exchange:
                 amount = call_strike * 0.1 * self.order_size
                 amount -= amount % 10 + 10
 
+                price = 0.0
                 for idx, order in enumerate(order_list.copy()):
 
                     try:
+                        if order[bid_ask] == 0.0005:
+                            price = 0.001
+                        else:
+                            price = order[bid_ask]
+
                         self.logger.info(f'Selling {self.order_size} amount of {order["instrument"]["instrument_name"]} at {order["bid"]} premium')
                         strike_dist = order['strike_dist']
                         params = {
                             'instrument_name' : order['instrument']['instrument_name'],
                             'type'            : 'limit',
-                            'price'           : order[bid_ask],
+                            'price'           : price,
                             'amount'          : self.order_size,
                             'label'           :  f'{prem_disp},{strike_dist}' #premium, strike distance, 
                         }
