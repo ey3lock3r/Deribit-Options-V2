@@ -624,11 +624,12 @@ class Deribit_Exchange:
             if odate == self.odate: # and order['instrument_name'] in self.orders:
                 try: 
                     lbl_prem, _ = order['label'].split(',')
+
+                    if float(lbl_prem) > self.max_traded_prem:
+                        self.max_traded_prem = float(lbl_prem)
+
                 except Exception as E:
                     lbl_prem = order['label']
-
-                if float(lbl_prem) > self.max_traded_prem:
-                    self.max_traded_prem = float(lbl_prem)
 
                 if lbl_prem not in self.traded_prems:
                     self.traded_prems.add(lbl_prem)
