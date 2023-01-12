@@ -158,6 +158,7 @@ def sell_008_premium_2k_dist(put_options, call_options, price, min_prem, strike_
             'ask': df_put['ask'],
             'sum_prem': sum_premium,
             'strike_dist': strk_dist,
+            'strike': df_put['strike'],
             # 'option_type': 'put',
             'direction': 'sell',
             'call_strike': df_call['strike']
@@ -168,6 +169,7 @@ def sell_008_premium_2k_dist(put_options, call_options, price, min_prem, strike_
             'ask': df_call['ask'],
             'sum_prem': sum_premium,
             'strike_dist': strk_dist,
+            'strike': df_call['strike'],
             # 'option_type': 'call',
             'direction': 'buy',
             'call_strike': df_call['strike']

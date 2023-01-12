@@ -92,6 +92,7 @@ class Deribit_Exchange:
         self.odate = None
         self.prev_call_options = {}
         self.prev_put_options = {}
+        self.trigger_orders = {}
         
     def create_message(self, method: str, params: dict = {},
                         mess_id: Union[int, str, None] = None,
@@ -215,6 +216,17 @@ class Deribit_Exchange:
         await ws.send(
             self.create_message(
                 f'private/{direction}',
+                { **params }
+            )
+        )
+
+        return self.get_response_result(await ws.recv(), raise_error = raise_error)
+
+    async def edit_order(self, ws, params: dict = {}, raise_error: bool = True):
+
+        await ws.send(
+            self.create_message(
+                f'private/edit',
                 { **params }
             )
         )
@@ -453,8 +465,8 @@ class Deribit_Exchange:
                 # res = await self.get_account_summary(websocket, currency=self.currency)
                 # self.equity = float(res['equity'])
 
-                if self.avail_funds / self.equity <= 0.35: 
-                    self.logger.info(f'Available fund {self.avail_funds} / {self.equity} equity <= 35%')
+                if self.avail_funds / self.equity <= 0.3: 
+                    self.logger.info(f'Available fund {self.avail_funds} / {self.equity} equity <= 30%')
                     return
                 
                 if await self.check_init_margin_vs_fund(): return
@@ -490,28 +502,40 @@ class Deribit_Exchange:
                             # order_list.pop(idx)
                             # premiums += float(order['bid'])
                             await asyncio.sleep(0.5)
+                            
+                            if order['strike'] in self.trigger_orders:
+                                self.trigger_orders[order['strike']]['amount'] += amount
 
-                            # risk management perpetual order
-                            # if order['option_type'] == 'put':
-                            #     direction = 'sell'
-                            # else:
-                            #     direction = 'buy'
-                            direction = order['direction']
-                            price = order['instrument']['strike']
-                            # amount = price * 0.1 * self.order_size
-                            # amount -= amount % 10 + 10
-                            params = {
-                                'instrument_name' : 'BTC-PERPETUAL',
-                                'type'            : 'stop_limit',
-                                'price'           : price,
-                                'amount'          : amount,
-                                'trigger'         : 'mark_price',
-                                'trigger_price'   : price,
-                                'label'           :  f'{prem_disp},{strike_dist}' #premium, strike distance, 
-                            }
-                            self.logger.info(f'Selling {amount} amount of BTC-PERPETUAL at {price} price')
-                            await self.create_order(websocket, direction, params)
+                                params = {
+                                    'order_id': self.trigger_orders[order['strike']]['order_id'],
+                                    'amount'  : self.trigger_orders[order['strike']]['amount']
+                                }
+                                await self.edit_order(websocket, params)
+                            
+                            else:
 
+                                direction = order['direction']
+                                price = order['instrument']['strike']
+                                # amount = price * 0.1 * self.order_size
+                                # amount -= amount % 10 + 10
+                                params = {
+                                    'instrument_name' : 'BTC-PERPETUAL',
+                                    'type'            : 'stop_limit',
+                                    'price'           : price,
+                                    'amount'          : amount,
+                                    'trigger'         : 'mark_price',
+                                    'trigger_price'   : price,
+                                    'label'           :  f'{prem_disp},{strike_dist}' #premium, strike distance, 
+                                }
+                                self.logger.info(f'Selling {amount} amount of BTC-PERPETUAL at {price} price')
+                                order_res = await self.create_order(websocket, direction, params)
+                                
+                                trig_ord = {
+                                    'amount'  : amount,
+                                    'order_id': order_res['order']['order_id']
+                                }
+                                self.trigger_orders[order['strike']] = trig_ord
+                                
                         else:
                             self.logger.info('Error in post_orders: Order not in order_res!')
 
@@ -600,6 +624,9 @@ class Deribit_Exchange:
         instrument = None
 
         for order in orders:
+            if order['instrument_name'] == 'BTC-PERPETUAL':
+                continue
+
             _, odate, strike, order_type  = order['instrument_name'].split('-')
             
             self.logger.info(f"{order['instrument_name']} : {order['realized_profit_loss']}")
@@ -619,6 +646,9 @@ class Deribit_Exchange:
                 self.orders[order['instrument_name']] = instrument
 
         for order in orders_hist:
+            if order['instrument_name'] == 'BTC-PERPETUAL':
+                continue
+
             _, odate, strike, order_type  = order['instrument_name'].split('-')
             
             if odate == self.odate: # and order['instrument_name'] in self.orders:
