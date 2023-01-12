@@ -931,7 +931,7 @@ class Deribit_Exchange:
 
             if not raw_instruments:
                 self.logger.info('Raw Instruments empty!')
-                return (None, None)
+                return # (None, None)
 
             raw_instruments = pd.DataFrame(raw_instruments)
 
