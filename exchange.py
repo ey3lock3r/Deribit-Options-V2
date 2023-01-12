@@ -593,8 +593,11 @@ class Deribit_Exchange:
                             'instrument_name': instrument_name,
                             'type': 'market'
                         }
-                    await self.close_position(websocket, params, raise_error = False)
-                    await asyncio.sleep(1)
+                    order_res = await self.close_position(websocket, params, raise_error = False)
+                    if 'order' in order_res:
+                        self.logger.info(f'BTC-PERPETUAL closed with profit {order_res["order"]["profit_loss"]} : {order_res["order"]["order_state"]} ')
+
+                    await asyncio.sleep(0.5)
 
                 except Exception as E:
                     self.logger.info(f'Error in close_all_positions: {E}')
