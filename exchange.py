@@ -486,7 +486,7 @@ class Deribit_Exchange:
                         else:
                             price = order[bid_ask]
 
-                        self.logger.info(f'Selling {self.order_size} amount of {order["instrument"]["instrument_name"]} at {order["bid"]} premium')
+                        self.logger.info(f'Selling {self.order_size} amount of {order["instrument"]["instrument_name"]} at {price} premium')
                         strike_dist = order['strike_dist']
                         params = {
                             'instrument_name' : order['instrument']['instrument_name'],
@@ -595,7 +595,7 @@ class Deribit_Exchange:
                         }
                     order_res = await self.close_position(websocket, params, raise_error = False)
                     if 'order' in order_res:
-                        self.logger.info(f'BTC-PERPETUAL closed with profit {order_res["order"]["profit_loss"]} : {order_res["order"]["order_state"]} ')
+                        self.logger.info(f'BTC-PERPETUAL closed...')
 
                     await asyncio.sleep(0.5)
 
