@@ -432,6 +432,8 @@ class Deribit_Exchange:
                 self.logger.info(f'Premium is {premium}')
                 return
 
+            self.logger.info(f'Premium is {premium}')
+
             # allow all trades when low volatility and time between 0-exp time
             if self.dvol < self.dvol_thres: # and \
                 # datetime.now(timezone.utc).hour < self.expire_time:
