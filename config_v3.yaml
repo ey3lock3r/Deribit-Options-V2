@@ -13,7 +13,7 @@ exchange:
   risk_perc: 0.003
   min_prem: 0.006 # 0.006
   strike_dist: 1000 # 1500
-  dvol_thres: 65
+  dvol_thres: 50
   expire_time: 6
 
   auth:
