@@ -589,7 +589,7 @@ class Deribit_Exchange:
 
                     instrument_name = 'BTC-PERPETUAL'
                     self.logger.info(f'Closing position {instrument_name}')
-                    params = { 
+                    params = {
                             'instrument_name': instrument_name,
                             'type': 'market'
                         }
