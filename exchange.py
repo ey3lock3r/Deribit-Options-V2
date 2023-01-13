@@ -475,7 +475,9 @@ class Deribit_Exchange:
                 direction = ''
                 call_strike = float(order_list[0]['call_strike'])
                 amount = call_strike * self.order_size # * 0.1
+                self.logger.info(f'{amount} amt = {call_strike} strike * {self.order_size} size')
                 amount -= amount % 10 + 10
+                self.logger.info(f'new amount = {amount}')
 
                 price = 0.0
                 for idx, order in enumerate(order_list.copy()):
