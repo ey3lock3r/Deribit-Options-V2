@@ -87,7 +87,7 @@ class Deribit_Exchange:
         self.avail_funds = 0
         self.dvol = 0
         self.dates_traded = {}
-        self.traded_prems = set()
+        self.traded_prems = {}
         self.max_traded_prem = 0.0
         self.odate = None
         self.prev_call_options = {}
@@ -507,8 +507,9 @@ class Deribit_Exchange:
                 #     return
 
                 if str(premium) in self.traded_prems:
-                    self.logger.info(f'{premium} premium already traded')
-                    return
+                    if self.traded_prems[str(premium)] >= self.max_prem_cnt:
+                        self.logger.info(f'Max count for premium {premium} already traded!')
+                        return
 
             premium = str(premium)
 
@@ -599,7 +600,12 @@ class Deribit_Exchange:
                         self.logger.info(f'Error in post_orders: {E}')
             
             # else:
-            self.traded_prems.add(premium)
+            # self.traded_prems.add(premium)
+            if premium in self.traded_prems:
+                self.traded_prems[premium] += 1
+            else:
+                self.traded_prems[premium] = 1
+
             self.max_traded_prem = float(premium)
     
     async def close_losing_positions(self):
@@ -733,7 +739,9 @@ class Deribit_Exchange:
                     lbl_prem = order['label']
 
                 if lbl_prem not in self.traded_prems:
-                    self.traded_prems.add(lbl_prem)
+                    self.traded_prems[lbl_prem] = 1
+                else:
+                    self.traded_prems[lbl_prem] += 1
 
         self.pos_updated = True
         self.logger.info(f'There are {len(self.orders)} open positions!')

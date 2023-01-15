@@ -15,6 +15,7 @@ exchange:
   strike_dist: 1000 # 1500
   dvol_thres: 50
   expire_time: 6
+  max_prem_cnt: 2
 
   auth:
     test:
