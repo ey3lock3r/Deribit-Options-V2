@@ -583,7 +583,7 @@ class Deribit_Exchange:
                                     'price'           : price,
                                     'amount'          : amount,
                                     'trigger'         : 'mark_price',
-                                    'trigger_price'   : price,
+                                    'trigger_price'   : order['trigger_price'], 
                                     'label'           :  f'{prem_disp},{strk_dist}' #premium, strike distance, 
                                 }
                                 self.logger.info(f'Selling {amount} amount of BTC-PERPETUAL at {price} price')

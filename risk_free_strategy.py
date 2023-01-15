@@ -158,7 +158,8 @@ def sell_008_premium_2k_dist(put_options, call_options, price, min_prem, strike_
             'ask': df_call['ask'],
             'strike': df_call['strike'],
             'option_type': 'call',
-            'direction': 'buy'
+            'direction': 'buy',
+            'trigger_price': df_call['strike'] - 1
         })
         data.append({
             'instrument': put_options[float(df_put['strike'])],
@@ -166,7 +167,8 @@ def sell_008_premium_2k_dist(put_options, call_options, price, min_prem, strike_
             'ask': df_put['ask'],
             'strike': df_put['strike'],
             'option_type': 'put',
-            'direction': 'sell'
+            'direction': 'sell',
+            'trigger_price': df_put['strike'] + 1
         })
 
     return data
