@@ -407,6 +407,15 @@ class Deribit_Exchange:
         # return true if not enough fund available
         return im_fund >= self.avail_funds
 
+    def calc_amount(self, call_strike, ord_size):
+        # call_strike = float(order_list[0]['call_strike'])
+        amount = call_strike * ord_size # * 0.1
+        self.logger.info(f'{amount} amt = {call_strike} strike * {ord_size} size')
+        if amount % 10 != 0:
+            amount -= amount % 10
+            amount += 10
+
+        self.logger.info(f'new amount = {amount}')
 
     async def post_orders(self, order_list):
 
@@ -427,6 +436,7 @@ class Deribit_Exchange:
             new_order = {}
             strk_dist = 0.0
             premium = 0.0
+            call_strike = 0.0
             
             for order in order_list.copy():
                 if order[bid_ask] == 0.0005:
@@ -440,17 +450,13 @@ class Deribit_Exchange:
                             'instrument' : self.best_put_instr,
                             'bid'        : self.best_put_instr['bid'],
                             'ask'        : self.best_put_instr['ask'],
-                            'sum_prem'   : 0,
-                            'strike_dist': 0,
                             'strike'     : self.best_put_instr['strike'],
                             'option_type': 'put',
-                            'direction'  : 'sell',
-                            'call_strike': 0
+                            'direction'  : 'sell'
                         }
                     else:
                         self.best_put_instr = order['instrument']
                         new_order = order
-
 
                 else:
                     if self.best_call_instr['bid'] > price:
@@ -458,22 +464,22 @@ class Deribit_Exchange:
                             'instrument' : self.best_call_instr,
                             'bid'        : self.best_call_instr['bid'],
                             'ask'        : self.best_call_instr['ask'],
-                            'sum_prem'   : 0,
-                            'strike_dist': 0,
                             'strike'     : self.best_call_instr['strike'],
-                            'option_type': 'put',
-                            'direction'  : 'sell',
-                            'call_strike': 0
+                            'option_type': 'call',
+                            'direction'  : 'buy'
                         }
                     else:
                         self.best_call_instr = order['instrument']
                         new_order = order
+
+                    call_strike = float(new_order['strike'])
 
                 new_order_list.append(new_order)
                 strk_dist += new_order['strike']
                 premium += new_order[bid_ask]
 
             # _, odate, strike, _  = order_list[0]['instrument']['instrument_name'].split('-')
+            order_list = new_order_list
             prem_disp = premium
 
             # if premium < self.min_prem and len(self.traded_prems) == 0:
@@ -525,13 +531,7 @@ class Deribit_Exchange:
             
                 # try:
                 direction = ''
-                call_strike = float(order_list[0]['call_strike'])
-                amount = call_strike * self.order_size # * 0.1
-                self.logger.info(f'{amount} amt = {call_strike} strike * {self.order_size} size')
-                amount -= amount % 10
-                amount += 10
-                self.logger.info(f'new amount = {amount}')
-
+                amount = 0.0
                 price = 0.0
                 for idx, order in enumerate(order_list.copy()):
 
@@ -542,13 +542,12 @@ class Deribit_Exchange:
                             price = order[bid_ask]
 
                         self.logger.info(f'Selling {self.order_size} amount of {order["instrument"]["instrument_name"]} at {price} premium')
-                        strike_dist = order['strike_dist']
                         params = {
                             'instrument_name' : order['instrument']['instrument_name'],
                             'type'            : 'limit',
                             'price'           : price,
                             'amount'          : self.order_size,
-                            'label'           :  f'{prem_disp},{strike_dist}' #premium, strike distance, 
+                            'label'           :  f'{prem_disp},{strk_dist}' #premium, strike distance, 
                         }
                         order_res = await self.create_order(websocket, 'sell', params)
                         if 'order' in order_res:
@@ -559,11 +558,12 @@ class Deribit_Exchange:
                             await asyncio.sleep(0.5)
                             
                             if order['strike'] in self.trigger_orders:
-                                self.trigger_orders[order['strike']]['amount'] += amount
+                                self.trigger_orders[order['strike']]['order_size'] += self.order_size
+                                amount = self.calc_amount(call_strike, self.trigger_orders[order['strike']]['order_size'])
 
                                 params = {
                                     'order_id': self.trigger_orders[order['strike']]['order_id'],
-                                    'amount'  : self.trigger_orders[order['strike']]['amount']
+                                    'amount'  : self.trigger_orders[order['strike']]['order_size']
                                 }
                                 await self.edit_order(websocket, params)
                             
@@ -573,6 +573,7 @@ class Deribit_Exchange:
                                 price = order['instrument']['strike']
                                 # amount = price * 0.1 * self.order_size
                                 # amount -= amount % 10 + 10
+                                amount = self.calc_amount(call_strike, self.order_size)
                                 params = {
                                     'instrument_name' : 'BTC-PERPETUAL',
                                     'type'            : 'stop_limit',
@@ -580,13 +581,13 @@ class Deribit_Exchange:
                                     'amount'          : amount,
                                     'trigger'         : 'mark_price',
                                     'trigger_price'   : price,
-                                    'label'           :  f'{prem_disp},{strike_dist}' #premium, strike distance, 
+                                    'label'           :  f'{prem_disp},{strk_dist}' #premium, strike distance, 
                                 }
                                 self.logger.info(f'Selling {amount} amount of BTC-PERPETUAL at {price} price')
                                 order_res = await self.create_order(websocket, direction, params)
                                 
                                 trig_ord = {
-                                    'amount'  : amount,
+                                    'order_size'  : self.order_size,
                                     'order_id': order_res['order']['order_id']
                                 }
                                 self.trigger_orders[order['strike']] = trig_ord
