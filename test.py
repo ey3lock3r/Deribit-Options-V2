@@ -41,3 +41,5 @@ import pandas as pd
 
 from web3 import Web3
 from web3.middleware import geth_poa_middleware
+
+print(0.1 > np.nan)

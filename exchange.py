@@ -93,6 +93,8 @@ class Deribit_Exchange:
         self.prev_call_options = {}
         self.prev_put_options = {}
         self.trigger_orders = {}
+        self.best_put_instr = None
+        self.best_call_instr = None
         
     def create_message(self, method: str, params: dict = {},
                         mess_id: Union[int, str, None] = None,
@@ -421,9 +423,57 @@ class Deribit_Exchange:
             err_tresh = 0
             bid_ask = 'bid'
 
-            _, odate, strike, _  = order_list[0]['instrument']['instrument_name'].split('-')
-            premium = order_list[0]['sum_prem']
-            strk_dist = order_list[0]['strike_dist']
+            new_order_list = []
+            new_order = {}
+            strk_dist = 0.0
+            premium = 0.0
+            
+            for order in order_list.copy():
+                if order[bid_ask] == 0.0005:
+                    price = 0.001
+                else:
+                    price = order[bid_ask]
+
+                if order['option_type'] == 'put':
+                    if self.best_put_instr['bid'] > price:
+                        new_order = {
+                            'instrument' : self.best_put_instr,
+                            'bid'        : self.best_put_instr['bid'],
+                            'ask'        : self.best_put_instr['ask'],
+                            'sum_prem'   : 0,
+                            'strike_dist': 0,
+                            'strike'     : self.best_put_instr['strike'],
+                            'option_type': 'put',
+                            'direction'  : 'sell',
+                            'call_strike': 0
+                        }
+                    else:
+                        self.best_put_instr = order['instrument']
+                        new_order = order
+
+
+                else:
+                    if self.best_call_instr['bid'] > price:
+                        new_order = {
+                            'instrument' : self.best_call_instr,
+                            'bid'        : self.best_call_instr['bid'],
+                            'ask'        : self.best_call_instr['ask'],
+                            'sum_prem'   : 0,
+                            'strike_dist': 0,
+                            'strike'     : self.best_call_instr['strike'],
+                            'option_type': 'put',
+                            'direction'  : 'sell',
+                            'call_strike': 0
+                        }
+                    else:
+                        self.best_call_instr = order['instrument']
+                        new_order = order
+
+                new_order_list.append(new_order)
+                strk_dist += new_order['strike']
+                premium += new_order[bid_ask]
+
+            # _, odate, strike, _  = order_list[0]['instrument']['instrument_name'].split('-')
             prem_disp = premium
 
             # if premium < self.min_prem and len(self.traded_prems) == 0:
@@ -652,6 +702,18 @@ class Deribit_Exchange:
                         instrument = self.prev_call_options[float(strike)]
                 
                 self.orders[order['instrument_name']] = instrument
+                if order_type == 'P':
+                    if self.best_put_instr is not None:
+                        if instrument['bid'] > self.best_put_instr['bid']:
+                            self.best_put_instr = instrument
+                    else:
+                        self.best_put_instr = instrument
+                else:
+                    if self.best_call_instr is not None:
+                        if instrument['bid'] > self.best_call_instr['bid']:
+                            self.best_call_instr = instrument
+                    else:
+                        self.best_call_instr = instrument
 
         for order in orders_hist:
             if order['instrument_name'] == 'BTC-PERPETUAL':
