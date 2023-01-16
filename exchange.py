@@ -726,12 +726,14 @@ class Deribit_Exchange:
                 self.orders[order['instrument_name']] = instrument
                 if order_type == 'P':
                     if self.best_put_instr is not None:
+                        self.logger.info(f"Best Put Stike: {self.best_put_instr['strike']} bid: {self.best_put_instr['bid']}   Order Strike: {instrument['strike']} bid: {instrument['bid']}")
                         if instrument['bid'] > self.best_put_instr['bid']:
                             self.best_put_instr = instrument
                     else:
                         self.best_put_instr = instrument
                 else:
                     if self.best_call_instr is not None:
+                        self.logger.info(f"Best Call Stike: {self.best_call_instr['strike']} bid: {self.best_call_instr['bid']}   Order Strike: {instrument['strike']} bid: {instrument['bid']}")
                         if instrument['bid'] > self.best_call_instr['bid']:
                             self.best_call_instr = instrument
                     else:
