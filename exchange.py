@@ -446,29 +446,37 @@ class Deribit_Exchange:
                     price = order[bid_ask]
 
                 if order['option_type'] == 'put':
-                    if self.best_put_instr['bid'] > price:
-                        new_order = {
-                            'instrument' : self.best_put_instr,
-                            'bid'        : self.best_put_instr['bid'],
-                            'ask'        : self.best_put_instr['ask'],
-                            'strike'     : self.best_put_instr['strike'],
-                            'option_type': 'put',
-                            'direction'  : 'sell'
-                        }
+                    if self.best_put_instr:
+                        if self.best_put_instr['bid'] > price:
+                            new_order = {
+                                'instrument' : self.best_put_instr,
+                                'bid'        : self.best_put_instr['bid'],
+                                'ask'        : self.best_put_instr['ask'],
+                                'strike'     : self.best_put_instr['strike'],
+                                'option_type': 'put',
+                                'direction'  : 'sell'
+                            }
+                        else:
+                            self.best_put_instr = order['instrument']
+                            new_order = order
                     else:
                         self.best_put_instr = order['instrument']
                         new_order = order
 
                 else:
-                    if self.best_call_instr['bid'] > price:
-                        new_order = {
-                            'instrument' : self.best_call_instr,
-                            'bid'        : self.best_call_instr['bid'],
-                            'ask'        : self.best_call_instr['ask'],
-                            'strike'     : self.best_call_instr['strike'],
-                            'option_type': 'call',
-                            'direction'  : 'buy'
-                        }
+                    if self.best_call_instr:
+                        if self.best_call_instr['bid'] > price:
+                            new_order = {
+                                'instrument' : self.best_call_instr,
+                                'bid'        : self.best_call_instr['bid'],
+                                'ask'        : self.best_call_instr['ask'],
+                                'strike'     : self.best_call_instr['strike'],
+                                'option_type': 'call',
+                                'direction'  : 'buy'
+                            }
+                        else:
+                            self.best_call_instr = order['instrument']
+                            new_order = order
                     else:
                         self.best_call_instr = order['instrument']
                         new_order = order
