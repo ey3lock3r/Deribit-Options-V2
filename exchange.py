@@ -576,8 +576,9 @@ class Deribit_Exchange:
 
                                 params = {
                                     'order_id': self.trigger_orders[order['strike']]['order_id'],
-                                    'amount'  : self.trigger_orders[order['strike']]['order_size']
+                                    'amount'  : amount
                                 }
+                                self.logger.info(f'Modifying order with amount {amount}')
                                 await self.edit_order(websocket, params)
                             
                             else:
@@ -596,7 +597,7 @@ class Deribit_Exchange:
                                     'trigger_price'   : order['trigger_price'], 
                                     'label'           :  f'{prem_disp},{strk_dist}' #premium, strike distance, 
                                 }
-                                self.logger.info(f'Selling {amount} amount of BTC-PERPETUAL at {price} price')
+                                self.logger.info(f'Selling {amount} amount of BTC-PERPETUAL at {price} price and trigger price at {order['trigger_price']}')
                                 order_res = await self.create_order(websocket, direction, params)
                                 
                                 trig_ord = {
