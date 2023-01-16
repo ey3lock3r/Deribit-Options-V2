@@ -417,6 +417,7 @@ class Deribit_Exchange:
             amount += 10
 
         self.logger.info(f'new amount = {amount}')
+        return amount
 
     async def post_orders(self, order_list):
 
@@ -481,11 +482,13 @@ class Deribit_Exchange:
                         self.best_call_instr = order['instrument']
                         new_order = order
 
-                call_strike = float(new_order['strike'])
+                    call_strike = float(new_order['strike'])
+
                 new_order_list.append(new_order)
                 strk_dist += new_order['strike']
                 premium += new_order[bid_ask]
 
+            self.logger.info(f'call_strike {call_strike}')
             # _, odate, strike, _  = order_list[0]['instrument']['instrument_name'].split('-')
             order_list = new_order_list
             prem_disp = premium
