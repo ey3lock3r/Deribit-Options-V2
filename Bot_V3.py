@@ -56,7 +56,7 @@ class CBot:
         self.exchange.init_vals()
 
 
-    async def check_riskfree_trade(self):
+    async def check_riskfree_trade(self, delay=0):
 
         # Set CSV Header
         # csv_label = ['strike', 'Call', 'Put']
@@ -67,6 +67,9 @@ class CBot:
         # self.logger.log(FILE, ",".join(csv_label + ['Premium Payout', 'Max Profit', 'Max Loss', 'Risk Reward', 'Kelly']))
 
         # Set CSV Header
+        await asyncio.sleep(delay)
+        await self.exchange.fetch_account_info()
+
         put_label = ['Price', 'instrument_name', 'P_Strike', 'P_Premium', 'P_Delta', 'P_Gamma', 'P_Vega', 'P_Rho']
         call_label = ['instrument_name', 'C_Strike', 'C_Premium', 'C_Delta', 'C_Gamma', 'C_Vega', 'C_Rho']
         self.logger.log(FILE, ",".join(put_label + call_label))
@@ -77,8 +80,6 @@ class CBot:
 
             if self.exchange.updated:
                 price = self.exchange.asset_price
-
-                
 
                 # trade strategy
                 if self.trade_strategy:
@@ -136,14 +137,16 @@ class CBot:
         # self.exchange.call_options, self.exchange.put_options = await self.exchange.prepare_option_struct()
         await self.exchange.prepare_option_struct()
         await self.exchange.prepare_prev_option_struct()
-        await self.exchange.fetch_account_info()
+        # await self.exchange.fetch_account_info()
 
         # tasks.append(asyncio.to_thread(self.check_riskfree_trade))
         tasks.append(asyncio.create_task(self.end_of_day()))
         tasks.append(asyncio.create_task(self.exchange.fetch_deribit_price_index()))
         tasks.append(asyncio.create_task(self.exchange.fetch_dvol_index()))
         # tasks.append(asyncio.create_task(self.exchange.order_mgmt_func(self.interval)))
-        tasks.append(asyncio.create_task(self.check_riskfree_trade()))
+        delay = len(self.exchange.call_options) + len(self.exchange.put_options)
+        delay *= 0.5 + 1
+        tasks.append(asyncio.create_task(self.check_riskfree_trade(delay)))
 
         # if not self.exchange.call_options or not self.exchange.put_options:
         #     return
