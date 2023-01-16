@@ -139,8 +139,8 @@ class Deribit_Exchange:
 
         else:
             # self.keep_alive = False
-            self.logger.info('Other unexpected messages!')
-            self.logger.info(f'Object contents: {obj}')
+            self.logger.debug('Other unexpected messages!')
+            self.logger.debug(f'Object contents: {obj}')
 
         return None
 
