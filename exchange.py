@@ -128,17 +128,19 @@ class Deribit_Exchange:
         if result_prop in obj:
             return obj[result_prop]
 
-        if 'error' in obj and raise_error:
+        if 'error' in obj:
             self.keep_alive = False
-            self.logger.debug('Error found!')
-            self.logger.debug(f'Error: code: {obj["error"]["code"]}')
-            self.logger.debug(f'Error: msg: {obj["error"]["message"]}')
-            raise CBotResponseError(obj['error']['message'],obj['error']['code'])
+            self.logger.info('Error found!')
+            self.logger.info(f'Error: code: {obj["error"]["code"]}')
+            self.logger.info(f'Error: msg: {obj["error"]["message"]}')
+
+            if raise_error:
+                raise CBotResponseError(obj['error']['message'],obj['error']['code'])
 
         else:
             # self.keep_alive = False
-            self.logger.debug('Other unexpected messages!')
-            self.logger.debug(f'Object contents: {obj}')
+            self.logger.info('Other unexpected messages!')
+            self.logger.info(f'Object contents: {obj}')
 
         return None
 
@@ -672,7 +674,9 @@ class Deribit_Exchange:
                         }
                     order_res = await self.close_position(websocket, params, raise_error = False)
                     if 'order' in order_res:
-                        self.logger.info(f'BTC-PERPETUAL closed...')
+                        self.logger.info('BTC-PERPETUAL closed...')
+                    else:
+                        self.logger.info('Order not in response. Error closing BTC-PERPETUAL ...')
 
                     await asyncio.sleep(0.5)
 
@@ -845,10 +849,6 @@ class Deribit_Exchange:
                         self.asset_price = data['price']
                         self.updated = True
 
-                        self.logger.debug(f'Price index: {self.asset_price}')
-
-                        # await self.close_losing_positions()
-
                         price = int(self.asset_price)
                         if price in self.put_options:
                             self.logger.info(f'ATM PUT buy price:  {self.put_options[price]["ask"]}: price: {price}')
@@ -899,7 +899,7 @@ class Deribit_Exchange:
                         data = message['data']
                         self.dvol = data['volatility']
 
-                        self.logger.debug(f'DVOL index: {self.dvol}')
+                        self.logger.info(f'DVOL index: {self.dvol}')
                 
                 except Exception as E:
                     self.logger.info(f'Error in fetch_dvol_index: {E}')

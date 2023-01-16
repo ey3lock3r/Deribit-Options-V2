@@ -256,14 +256,14 @@ class CBot:
                 self.logger.info(traceback.print_exc())
 
             finally:
-                time.sleep(1)
+                time.sleep(0.5)
                 loop.run_until_complete(self.exchange.grace_exit())
                 self.logger.info('Gracefully exit')
                 
                 for task in asyncio.all_tasks(loop):
                     task.cancel()
 
-                time.sleep(1)
+                time.sleep(0.5)
 
                 if self.stop or self.exchange.env == 'test':
                     break
