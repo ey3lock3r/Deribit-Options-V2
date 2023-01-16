@@ -481,8 +481,7 @@ class Deribit_Exchange:
                         self.best_call_instr = order['instrument']
                         new_order = order
 
-                    call_strike = float(new_order['strike'])
-
+                call_strike = float(new_order['strike'])
                 new_order_list.append(new_order)
                 strk_dist += new_order['strike']
                 premium += new_order[bid_ask]
