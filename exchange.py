@@ -488,7 +488,8 @@ class Deribit_Exchange:
                 strk_dist += new_order['strike']
                 premium += new_order[bid_ask]
 
-            self.logger.info(f'call_strike {call_strike}')
+            self.logger.info(f'Best call strike: {self.best_call_instr["strike"]}')
+            self.logger.info(f'Best put strike: {self.best_put_instr["strike"]}')
             # _, odate, strike, _  = order_list[0]['instrument']['instrument_name'].split('-')
             order_list = new_order_list
             prem_disp = premium
