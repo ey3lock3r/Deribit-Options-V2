@@ -937,7 +937,7 @@ class Deribit_Exchange:
                         data = message['data']
                         self.dvol = data['volatility']
 
-                        self.logger.info(f'DVOL index: {self.dvol}')
+                        self.logger.debug(f'DVOL index: {self.dvol}')
                 
                 except Exception as E:
                     self.logger.info(f'Error in fetch_dvol_index: {E}')
