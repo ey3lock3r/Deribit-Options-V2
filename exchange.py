@@ -306,6 +306,19 @@ class Deribit_Exchange:
 
         return self.get_response_result(await ws.recv(), raise_error = raise_error)
 
+    async def get_open_orders_by_instrument(self, ws, instrument_name: str = '', oo_type: str = '',
+                                raise_error: bool = True):
+
+        await ws.send(
+            self.create_message(
+                f'private/get_open_orders_by_instrument',
+                { 'instrument_name': instrument_name,
+                  'type': oo_type }
+            )
+        )
+
+        return self.get_response_result(await ws.recv(), raise_error = raise_error)
+
     async def get_user_trades_by_currency(self, ws, currency: str = 'BTC', kind: str = 'option',
                                     raise_error: bool = True):
 
@@ -697,6 +710,23 @@ class Deribit_Exchange:
         self.equity = float(res['equity'])
         self.avail_funds = float(res['available_funds'])
 
+    async def fetch_trigger_orders(self, ws, delay = 0):
+        if not self.trading: return
+
+        self.logger.info(f'fetch_trigger_orders')
+
+        await asyncio.sleep(delay)
+        orders = await self.get_positions(ws, currency=self.currency)
+
+        trig_orders = await self.get_open_orders_by_instrument(ws, 'BTC-PERPETUAL', 'stop_limit')
+
+        for order in trig_orders:
+            params = {
+                'order_id': order['order_id'],
+                'amount'  : 0
+            }
+            self.trigger_orders[float(order['price'])] = params
+
     async def fetch_account_positions(self, ws, delay = 0):
 
         if not self.trading: return
@@ -744,6 +774,12 @@ class Deribit_Exchange:
                     else:
                         self.best_call_instr = instrument
 
+                if float(strike) in self.trigger_orders:
+                    self.logger.info(f'Strike {strike} found in triger_orders!')
+                    self.trigger_orders[float(strike)]['amount'] = abs(float(order['size']))
+                else:
+                    self.logger.info(f'Strike {strike} not found in triger_orders!')
+
         for order in orders_hist:
             if order['instrument_name'] == 'BTC-PERPETUAL':
                 continue
@@ -777,7 +813,8 @@ class Deribit_Exchange:
 
             await asyncio.gather(
                 self.fetch_account_equity(websocket, 0.5),
-                self.fetch_account_positions(websocket, 1)
+                self.fetch_trigger_orders(websocket, 1),
+                self.fetch_account_positions(websocket, 1.5)
             )
 
     async def test_run(self) -> NoReturn:
