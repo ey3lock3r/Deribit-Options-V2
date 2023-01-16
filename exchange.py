@@ -439,6 +439,7 @@ class Deribit_Exchange:
             strk_dist = 0.0
             premium = 0.0
             call_strike = 0.0
+            price = 0.0
             
             for order in order_list.copy():
                 if order[bid_ask] == 0.0005:
