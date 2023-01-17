@@ -1036,7 +1036,6 @@ class Deribit_Exchange:
                     
                     err_cnt += 1
                     if err_cnt == max_err_cnt:
-                        self.keep_alive = False
                         raise CBotError('Max connection error count reached!')
 
                     break
