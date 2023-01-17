@@ -222,7 +222,7 @@ class CBot:
             await asyncio.sleep( 86400 - int(datetime.now(timezone.utc).timestamp()) % 86400 + 21600)   # 24hrs + 6hrs, 6am
 
         if len(self.exchange.orders) > 0:
-            await asyncio.sleep( 28800 - int(datetime.now(timezone.utc).timestamp()) % 28800 )   # 8am
+            await asyncio.sleep( 28800 - int(datetime.now(timezone.utc).timestamp()) % 28800 - 10 )   # 8am
             
         # await asyncio.sleep( 120 - time.time() % 120 )
         self.exchange.keep_alive = False
@@ -230,7 +230,7 @@ class CBot:
         await self.exchange.close_all_positions()
 
         self.logger.info('End of day!')
-        await asyncio.sleep( 120 )  # sleep/wait for 2 minutes before starting
+        await asyncio.sleep( 90 )  # sleep/wait for 2 minutes before starting
         
     def run(self) -> NoReturn:
         """Wrapper for start to run without additional libraries for managing asynchronous"""
