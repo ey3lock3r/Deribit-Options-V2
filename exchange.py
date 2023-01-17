@@ -453,7 +453,7 @@ class Deribit_Exchange:
             new_order = {}
             strk_dist = 0.0
             premium = 0.0
-            call_strike = 0.0
+            # call_strike = 0.0
             price = 0.0
             
             for order in order_list.copy():
@@ -498,7 +498,7 @@ class Deribit_Exchange:
                         self.best_call_instr = order['instrument']
                         new_order = order
 
-                    call_strike = float(new_order['strike'])
+                    # call_strike = float(new_order['strike'])
 
                 new_order_list.append(new_order)
                 strk_dist += new_order['strike']
@@ -589,7 +589,7 @@ class Deribit_Exchange:
                             
                             if order['strike'] in self.trigger_orders:
                                 self.trigger_orders[order['strike']]['order_size'] += self.order_size
-                                amount = self.calc_amount(call_strike, self.trigger_orders[order['strike']]['order_size'])
+                                amount = self.calc_amount(order['strike'], self.trigger_orders[order['strike']]['order_size'])
 
                                 params = {
                                     'order_id': self.trigger_orders[order['strike']]['order_id'],
@@ -604,7 +604,7 @@ class Deribit_Exchange:
                                 price = order['instrument']['strike']
                                 # amount = price * 0.1 * self.order_size
                                 # amount -= amount % 10 + 10
-                                amount = self.calc_amount(call_strike, self.order_size)
+                                amount = self.calc_amount(order['strike'], self.order_size)
                                 params = {
                                     'instrument_name' : 'BTC-PERPETUAL',
                                     'type'            : 'stop_limit',
