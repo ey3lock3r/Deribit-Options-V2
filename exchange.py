@@ -971,6 +971,9 @@ class Deribit_Exchange:
             put_options = self.prev_put_options
             call_options = self.prev_call_options
 
+        max_err_cnt = 2
+        err_cnt = 0
+
         async for websocket in websockets.connect(self.url):
 
             await self.auth(websocket)
@@ -1030,6 +1033,11 @@ class Deribit_Exchange:
                 except Exception as E:
                     await asyncio.sleep(delay)
                     self.logger.info(f'Reconnecting listener for {strike}')
+                    
+                    err_cnt += 1
+                    if err_cnt == max_err_cnt:
+                        raise CBotError('Max connection error count reached!')
+
                     break
 
             if not self.keep_alive:

@@ -254,6 +254,7 @@ class CBot:
                 self.exchange.keep_alive = False
                 self.logger.info(f'Error in run: {E}')
                 self.logger.info(traceback.print_exc())
+                self.logger.info('Restarting bot...')
 
             finally:
                 time.sleep(0.5)
