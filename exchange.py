@@ -563,6 +563,7 @@ class Deribit_Exchange:
                 direction = ''
                 amount = 0.0
                 price = 0.0
+                err_loc = ''
                 for idx, order in enumerate(order_list.copy()):
 
                     try:
@@ -579,6 +580,7 @@ class Deribit_Exchange:
                             'amount'          : self.order_size,
                             'label'           :  f'{prem_disp},{strk_dist}' #premium, strike distance, 
                         }
+                        err_loc = order['instrument']['instrument_name']
                         order_res = await self.create_order(websocket, 'sell', params)
                         if 'order' in order_res:
                             order_det = order_res['order']
@@ -596,6 +598,7 @@ class Deribit_Exchange:
                                     'amount'  : amount
                                 }
                                 self.logger.info(f'Modifying order with amount {amount}')
+                                err_loc = f'Modify BTC-PERPETUAL {order["option_type"]}'
                                 await self.edit_order(websocket, params)
                             
                             else:
@@ -614,7 +617,8 @@ class Deribit_Exchange:
                                     'trigger_price'   : order['trigger_price'], 
                                     'label'           :  f'{prem_disp},{strk_dist}' #premium, strike distance, 
                                 }
-                                self.logger.info(f'Selling {amount} amount of BTC-PERPETUAL at {price} price and trigger price at {order["trigger_price"]}')
+                                self.logger.info(f'{direction}ing {amount} amount of BTC-PERPETUAL at {price} price and trigger price at {order["trigger_price"]}')
+                                err_loc = f'New BTC-PERPETUAL {order["option_type"]}'
                                 order_res = await self.create_order(websocket, direction, params)
                                 
                                 trig_ord = {
@@ -627,7 +631,7 @@ class Deribit_Exchange:
                             self.logger.info('Error in post_orders: Order not in order_res!')
 
                     except Exception as E:
-                        self.logger.info(f'Error in post_orders: {E}')
+                        self.logger.info(f'Error in post_orders: {err_loc} : {E}')
             
             # else:
             # self.traded_prems.add(premium)
