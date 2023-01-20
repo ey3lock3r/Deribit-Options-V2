@@ -457,10 +457,10 @@ class Deribit_Exchange:
             price = 0.0
             
             for order in order_list.copy():
-                # if order[bid_ask] == 0.0005:
-                #     price = 0.001
-                # else:
-                #     price = order[bid_ask]
+                if order[bid_ask] == 0.0005:
+                    price = 0.001
+                else:
+                    price = order[bid_ask]
 
                 if order['option_type'] == 'put':
                     if self.best_put_instr:
@@ -567,6 +567,7 @@ class Deribit_Exchange:
                 for idx, order in enumerate(order_list.copy()):
 
                     try:
+                        err_loc = order['instrument']['instrument_name']
                         if order[bid_ask] == 0.0005:
                             price = 0.001
                         else:
@@ -580,7 +581,6 @@ class Deribit_Exchange:
                             'amount'          : self.order_size,
                             'label'           :  f'{prem_disp},{strk_dist}' #premium, strike distance, 
                         }
-                        err_loc = order['instrument']['instrument_name']
                         order_res = await self.create_order(websocket, 'sell', params)
                         if 'order' in order_res:
                             order_det = order_res['order']
@@ -590,24 +590,24 @@ class Deribit_Exchange:
                             await asyncio.sleep(0.5)
                             
                             if order['strike'] in self.trigger_orders:
-                                self.trigger_orders[order['strike']]['order_size'] += self.order_size
-                                amount = self.calc_amount(order['strike'], self.trigger_orders[order['strike']]['order_size'])
+                                err_loc = f'Modify BTC-PERPETUAL {order["option_type"]}'
+                                osize = self.trigger_orders[order['strike']]['order_size'] + self.order_size
+                                self.trigger_orders[order['strike']]['order_size'] = osize
+                                amount = self.calc_amount(order['strike'], osize)
+                                self.logger.info(f'Modifying order with amount {amount}')
 
                                 params = {
                                     'order_id': self.trigger_orders[order['strike']]['order_id'],
                                     'amount'  : amount
                                 }
-                                self.logger.info(f'Modifying order with amount {amount}')
-                                err_loc = f'Modify BTC-PERPETUAL {order["option_type"]}'
                                 await self.edit_order(websocket, params)
                             
                             else:
-
+                                err_loc = f'New BTC-PERPETUAL {order["option_type"]}'
                                 direction = order['direction']
                                 price = order['instrument']['strike']
-                                # amount = price * 0.1 * self.order_size
-                                # amount -= amount % 10 + 10
                                 amount = self.calc_amount(order['strike'], self.order_size)
+                                self.logger.info(f'{direction}ing {amount} amount of BTC-PERPETUAL at {price} price and trigger price at {order["trigger_price"]}')
                                 params = {
                                     'instrument_name' : 'BTC-PERPETUAL',
                                     'type'            : 'stop_limit',
@@ -617,8 +617,6 @@ class Deribit_Exchange:
                                     'trigger_price'   : order['trigger_price'], 
                                     'label'           :  f'{prem_disp},{strk_dist}' #premium, strike distance, 
                                 }
-                                self.logger.info(f'{direction}ing {amount} amount of BTC-PERPETUAL at {price} price and trigger price at {order["trigger_price"]}')
-                                err_loc = f'New BTC-PERPETUAL {order["option_type"]}'
                                 order_res = await self.create_order(websocket, direction, params)
                                 
                                 trig_ord = {
@@ -629,6 +627,8 @@ class Deribit_Exchange:
                                 
                         else:
                             self.logger.info('Error in post_orders: Order not in order_res!')
+
+                        await asyncio.sleep(0.5)
 
                     except Exception as E:
                         self.logger.info(f'Error in post_orders: {err_loc} : {E}')
