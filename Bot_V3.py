@@ -102,7 +102,6 @@ class CBot:
 
                 self.exchange.updated = False
                 self.count_to_reset = 0
-                await asyncio.sleep(self.interval)
             
             else:
                 self.logger.info('Prices not updated')
@@ -113,7 +112,7 @@ class CBot:
                     self.logger.info('Resetting connection... ')
                     raise CBotError('Count_to_reset reached!')
 
-                await asyncio.sleep(self.interval * 0.3)
+            await asyncio.sleep(self.interval)
 
         self.logger.info('check_riskfree_trade ended!')
 
