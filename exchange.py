@@ -595,6 +595,7 @@ class Deribit_Exchange:
                                 err_loc = f'Modify BTC-PERPETUAL {order["option_type"]}'
                                 osize = self.trigger_orders[order['strike']]['order_size'] + self.order_size
                                 self.trigger_orders[order['strike']]['order_size'] = osize
+                                self.logger.info(f'Total order size: {amount}')
                                 amount = self.calc_amount(order['strike'], osize)
                                 self.logger.info(f'Modifying order with amount {amount}')
 
