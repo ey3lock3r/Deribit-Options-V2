@@ -730,7 +730,7 @@ class Deribit_Exchange:
         for order in trig_orders:
             params = {
                 'order_id': order['order_id'],
-                'amount'  : 0
+                'order_size'  : 0
             }
             self.trigger_orders[float(order['price'])] = params
 
@@ -783,7 +783,7 @@ class Deribit_Exchange:
 
                 if float(strike) in self.trigger_orders:
                     self.logger.info(f'Strike {strike} found in triger_orders!')
-                    self.trigger_orders[float(strike)]['amount'] = abs(float(order['size']))
+                    self.trigger_orders[float(strike)]['order_size'] = abs(float(order['size']))
                 else:
                     self.logger.info(f'Strike {strike} not found in triger_orders!')
 
