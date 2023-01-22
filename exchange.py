@@ -521,13 +521,16 @@ class Deribit_Exchange:
             self.logger.info(f'Premium is {premium}')
 
             # allow all trades when low volatility and time between 0-exp time
+            max_prem_cnt = 0
             if datetime.now(timezone.utc).hour >= 8:
                 if self.dvol < self.dvol_thres: # and \
                     # datetime.now(timezone.utc).hour < self.expire_time:
                     # bid_ask = 'ask'
-                    pass
+                    max_prem_cnt = 2
 
                 else:
+                    max_prem_cnt = self.max_prem_cnt
+
                     if premium < self.min_prem or \
                         strk_dist <= self.strike_dist:
                         self.logger.info(f'Premium {premium} < {self.min_prem} or Strike Dist {strk_dist} <= {self.strike_dist}')
@@ -537,10 +540,11 @@ class Deribit_Exchange:
                     #     self.logger.info(f'{premium} premium <= {self.max_traded_prem} max traded prem')
                     #     return
 
-                    if str(premium) in self.traded_prems:
-                        if self.traded_prems[str(premium)] >= self.max_prem_cnt:
-                            self.logger.info(f'Max count for premium {premium} already traded!')
-                            return
+
+                if str(premium) in self.traded_prems:
+                    if self.traded_prems[str(premium)] >= max_prem_cnt:
+                        self.logger.info(f'Max count for premium {premium} already traded!')
+                        return
 
             premium = str(premium)
 
