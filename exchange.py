@@ -807,10 +807,11 @@ class Deribit_Exchange:
                 except Exception as E:
                     lbl_prem = order['label']
 
-                if lbl_prem not in self.traded_prems:
-                    self.traded_prems[lbl_prem] = 1
-                else:
-                    self.traded_prems[lbl_prem] += 1
+                if order_type == 'P':
+                    if lbl_prem not in self.traded_prems:
+                        self.traded_prems[lbl_prem] = 1
+                    else:
+                        self.traded_prems[lbl_prem] += 1
 
         self.pos_updated = True
         self.logger.info(f'There are {len(self.orders)} open positions!')
