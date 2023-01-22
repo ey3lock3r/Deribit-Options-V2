@@ -455,12 +455,16 @@ class Deribit_Exchange:
             premium = 0.0
             # call_strike = 0.0
             price = 0.0
+
+            if np.isnan(order_list[0]['sum_premium']):
+                self.logger.info(f'Premium is {premium}')
+                return
             
             for order in order_list.copy():
-                if order[bid_ask] == 0.0005:
-                    price = 0.001
-                else:
-                    price = order[bid_ask]
+                # if order[bid_ask] == 0.0005:
+                #     price = 0.001
+                # else:
+                #     price = order[bid_ask]
 
                 if order['option_type'] == 'put':
                     if self.best_put_instr:
@@ -574,7 +578,8 @@ class Deribit_Exchange:
 
                     try:
                         err_loc = order['instrument']['instrument_name']
-                        if order[bid_ask] == 0.0005:
+
+                        if datetime.now(timezone.utc).hour >= 8 and order[bid_ask] == 0.0005:
                             price = 0.001
                         else:
                             price = order[bid_ask]
