@@ -543,7 +543,7 @@ class Deribit_Exchange:
 
                 if str(premium) in self.traded_prems:
                     if self.traded_prems[str(premium)] >= max_prem_cnt:
-                        self.logger.info(f'Max count for premium {premium} already traded!')
+                        self.logger.info(f'Max count of {self.traded_prems[str(premium)]} for premium {premium} already traded!')
                         return
 
             premium = str(premium)
