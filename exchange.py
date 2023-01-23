@@ -464,7 +464,7 @@ class Deribit_Exchange:
                 # if order[bid_ask] == 0.0005:
                 #     price = 0.001
                 # else:
-                #     price = order[bid_ask]
+                price = order[bid_ask]
 
                 if order['option_type'] == 'put':
                     if self.best_put_instr:
