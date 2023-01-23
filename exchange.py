@@ -704,7 +704,7 @@ class Deribit_Exchange:
                     order_res = await self.close_position(websocket, params, raise_error = False)
                     if 'order' in order_res:
                         self.logger.info('BTC-PERPETUAL closed...')
-                        self.logger.info(f'BTC-PERPETUAL closed at price {order_res["order"]["price"]} profit loss of {order_res["order"]["profit_loss"]}')
+                        # self.logger.info(f'BTC-PERPETUAL closed at price {order_res["order"]["price"]} profit loss of {order_res["order"]["profit_loss"]}')
                     else:
                         self.logger.info('Order not in response. Error closing BTC-PERPETUAL ...')
 
