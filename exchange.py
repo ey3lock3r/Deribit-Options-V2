@@ -468,7 +468,9 @@ class Deribit_Exchange:
 
                 if order['option_type'] == 'put':
                     if self.best_put_instr:
-                        if self.best_put_instr['bid'] > price and abs(self.asset_price - self.best_put_instr['strike']) >= 30:
+                        if self.best_put_instr['bid'] > price                    \
+                            and self.best_put_instr['strike'] < self.asset_price \
+                            and abs(self.asset_price - self.best_put_instr['strike']) >= 30:
                             new_order = {
                                 'instrument' : self.best_put_instr,
                                 'bid'        : self.best_put_instr['bid'],
@@ -487,7 +489,9 @@ class Deribit_Exchange:
 
                 else:
                     if self.best_call_instr:
-                        if self.best_call_instr['bid'] > price and abs(self.best_call_instr['strike'] - self.asset_price) >= 30:
+                        if self.best_call_instr['bid'] > price                    \
+                            and self.best_call_instr['strike'] > self.asset_price \
+                            and abs(self.best_call_instr['strike'] - self.asset_price) >= 30:
                             new_order = {
                                 'instrument' : self.best_call_instr,
                                 'bid'        : self.best_call_instr['bid'],
