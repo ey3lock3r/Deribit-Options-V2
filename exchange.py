@@ -476,7 +476,7 @@ class Deribit_Exchange:
                                 'strike'     : self.best_put_instr['strike'],
                                 'option_type': 'put',
                                 'direction'  : 'sell',
-                                'trigger_price': self.best_put_instr['strike'] + 1
+                                'trigger_price': self.best_put_instr['strike'] + 10
                             }
                         else:
                             self.best_put_instr = order['instrument']
@@ -495,7 +495,7 @@ class Deribit_Exchange:
                                 'strike'     : self.best_call_instr['strike'],
                                 'option_type': 'call',
                                 'direction'  : 'buy',
-                                'trigger_price': self.best_call_instr['strike'] - 1
+                                'trigger_price': self.best_call_instr['strike'] - 10
                             }
                         else:
                             self.best_call_instr = order['instrument']
