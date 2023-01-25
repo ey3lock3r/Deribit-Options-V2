@@ -464,7 +464,7 @@ class Deribit_Exchange:
                 # if order[bid_ask] == 0.0005:
                 #     price = 0.001
                 # else:
-                #     price = order[bid_ask]
+                price = order[bid_ask]
 
                 if order['option_type'] == 'put':
                     if self.best_put_instr:
@@ -478,7 +478,7 @@ class Deribit_Exchange:
                                 'strike'     : self.best_put_instr['strike'],
                                 'option_type': 'put',
                                 'direction'  : 'sell',
-                                'trigger_price': self.best_put_instr['strike'] + 1
+                                'trigger_price': self.best_put_instr['strike'] - 10
                             }
                         else:
                             self.best_put_instr = order['instrument']
@@ -499,7 +499,7 @@ class Deribit_Exchange:
                                 'strike'     : self.best_call_instr['strike'],
                                 'option_type': 'call',
                                 'direction'  : 'buy',
-                                'trigger_price': self.best_call_instr['strike'] - 1
+                                'trigger_price': self.best_call_instr['strike'] + 10
                             }
                         else:
                             self.best_call_instr = order['instrument']
@@ -609,7 +609,7 @@ class Deribit_Exchange:
                                 osize = self.trigger_orders[order['strike']]['order_size'] + self.order_size
                                 self.trigger_orders[order['strike']]['order_size'] = osize
                                 self.logger.info(f'Total order size: {osize}')
-                                amount = self.calc_amount(order['strike'], osize)
+                                amount = self.calc_amount(order['trigger_price'], osize)
                                 self.logger.info(f'Modifying order with amount {amount}')
 
                                 params = {
@@ -621,16 +621,16 @@ class Deribit_Exchange:
                             else:
                                 err_loc = f'New BTC-PERPETUAL {order["option_type"]}'
                                 direction = order['direction']
-                                price = order['instrument']['strike']
-                                amount = self.calc_amount(order['strike'], self.order_size)
-                                self.logger.info(f'{direction}ing {amount} amount of BTC-PERPETUAL at {price} price and trigger price at {order["trigger_price"]}')
+                                price = order['trigger_price']
+                                amount = self.calc_amount(order['trigger_price'], self.order_size)
+                                self.logger.info(f'{direction}ing {amount} amount of BTC-PERPETUAL at {price} price and trigger price at {order["strike"]}')
                                 params = {
                                     'instrument_name' : 'BTC-PERPETUAL',
                                     'type'            : 'stop_limit',
                                     'price'           : price,
                                     'amount'          : amount,
                                     'trigger'         : 'mark_price',
-                                    'trigger_price'   : order['trigger_price'], 
+                                    'trigger_price'   : order['strike'], 
                                     'label'           :  f'{prem_disp},{strk_dist}' #premium, strike distance, 
                                 }
                                 order_res = await self.create_order(websocket, direction, params)
@@ -708,7 +708,7 @@ class Deribit_Exchange:
                     order_res = await self.close_position(websocket, params, raise_error = False)
                     if 'order' in order_res:
                         self.logger.info('BTC-PERPETUAL closed...')
-                        self.logger.info(f'BTC-PERPETUAL closed at price {order_res["order"]["price"]} profit loss of {order_res["order"]["profit_loss"]}')
+                        # self.logger.info(f'BTC-PERPETUAL closed at price {order_res["order"]["price"]} profit loss of {order_res["order"]["profit_loss"]}')
                     else:
                         self.logger.info('Order not in response. Error closing BTC-PERPETUAL ...')
 
