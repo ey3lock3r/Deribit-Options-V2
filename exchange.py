@@ -194,7 +194,7 @@ class Deribit_Exchange:
 
         return self.get_response_result(await ws.recv())
 
-    async def get_index_price(self, ws, delay = 0) -> Optional[dict]:
+    async def get_index_price(self, ws, delay = 0):
         
         self.logger.info('get_index_price')
 
