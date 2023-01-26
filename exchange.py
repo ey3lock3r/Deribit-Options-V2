@@ -460,64 +460,65 @@ class Deribit_Exchange:
                 self.logger.info(f'Premium is {premium}')
                 return
             
-            for order in order_list.copy():
-                # if order[bid_ask] == 0.0005:
-                #     price = 0.001
-                # else:
-                price = order[bid_ask]
+            # for order in order_list.copy():
+            #     # if order[bid_ask] == 0.0005:
+            #     #     price = 0.001
+            #     # else:
+            #     price = order[bid_ask]
 
-                if order['option_type'] == 'put':
-                    if self.best_put_instr:
-                        if self.best_put_instr['bid'] > price                    \
-                            and self.best_put_instr['strike'] < self.asset_price \
-                            and abs(self.asset_price - self.best_put_instr['strike']) >= 30:
-                            new_order = {
-                                'instrument' : self.best_put_instr,
-                                'bid'        : self.best_put_instr['bid'],
-                                'ask'        : self.best_put_instr['ask'],
-                                'strike'     : self.best_put_instr['strike'],
-                                'option_type': 'put',
-                                'direction'  : 'sell',
-                                'trigger_price': self.best_put_instr['strike'] - 10
-                            }
-                        else:
-                            self.best_put_instr = order['instrument']
-                            new_order = order
-                    else:
-                        self.best_put_instr = order['instrument']
-                        new_order = order
+            #     if order['option_type'] == 'put':
+            #         if self.best_put_instr:
+            #             if self.best_put_instr['bid'] > price                    \
+            #                 and self.best_put_instr['strike'] < self.asset_price \
+            #                 and abs(self.asset_price - self.best_put_instr['strike']) >= 30:
+            #                 new_order = {
+            #                     'instrument' : self.best_put_instr,
+            #                     'bid'        : self.best_put_instr['bid'],
+            #                     'ask'        : self.best_put_instr['ask'],
+            #                     'strike'     : self.best_put_instr['strike'],
+            #                     'option_type': 'put',
+            #                     'direction'  : 'sell',
+            #                     'trigger_price': self.best_put_instr['strike'] - 10
+            #                 }
+            #             else:
+            #                 self.best_put_instr = order['instrument']
+            #                 new_order = order
+            #         else:
+            #             self.best_put_instr = order['instrument']
+            #             new_order = order
 
-                else:
-                    if self.best_call_instr:
-                        if self.best_call_instr['bid'] > price                    \
-                            and self.best_call_instr['strike'] > self.asset_price \
-                            and abs(self.best_call_instr['strike'] - self.asset_price) >= 30:
-                            new_order = {
-                                'instrument' : self.best_call_instr,
-                                'bid'        : self.best_call_instr['bid'],
-                                'ask'        : self.best_call_instr['ask'],
-                                'strike'     : self.best_call_instr['strike'],
-                                'option_type': 'call',
-                                'direction'  : 'buy',
-                                'trigger_price': self.best_call_instr['strike'] + 10
-                            }
-                        else:
-                            self.best_call_instr = order['instrument']
-                            new_order = order
-                    else:
-                        self.best_call_instr = order['instrument']
-                        new_order = order
+            #     else:
+            #         if self.best_call_instr:
+            #             if self.best_call_instr['bid'] > price                    \
+            #                 and self.best_call_instr['strike'] > self.asset_price \
+            #                 and abs(self.best_call_instr['strike'] - self.asset_price) >= 30:
+            #                 new_order = {
+            #                     'instrument' : self.best_call_instr,
+            #                     'bid'        : self.best_call_instr['bid'],
+            #                     'ask'        : self.best_call_instr['ask'],
+            #                     'strike'     : self.best_call_instr['strike'],
+            #                     'option_type': 'call',
+            #                     'direction'  : 'buy',
+            #                     'trigger_price': self.best_call_instr['strike'] + 10
+            #                 }
+            #             else:
+            #                 self.best_call_instr = order['instrument']
+            #                 new_order = order
+            #         else:
+            #             self.best_call_instr = order['instrument']
+            #             new_order = order
 
-                    # call_strike = float(new_order['strike'])
+            #         # call_strike = float(new_order['strike'])
 
-                new_order_list.append(new_order)
-                strk_dist += new_order['strike']
-                premium += new_order[bid_ask]
+            #     new_order_list.append(new_order)
+            #     strk_dist += new_order['strike']
+            #     premium += new_order[bid_ask]
 
-            self.logger.info(f'Best call strike: {self.best_call_instr["strike"]}')
-            self.logger.info(f'Best put strike: {self.best_put_instr["strike"]}')
+            # self.logger.info(f'Best call strike: {self.best_call_instr["strike"]}')
+            # self.logger.info(f'Best put strike: {self.best_put_instr["strike"]}')
             # _, odate, strike, _  = order_list[0]['instrument']['instrument_name'].split('-')
-            order_list = new_order_list
+            # order_list = new_order_list
+            premium = order_list[0]['sum_premium']
             prem_disp = premium
 
             # if premium < self.min_prem and len(self.traded_prems) == 0:
