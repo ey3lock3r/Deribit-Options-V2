@@ -215,6 +215,8 @@ class Deribit_Exchange:
             self.asset_price = price['index_price']
             self.updated = True
 
+        return self.asset_price 
+
     async def create_order(self, ws, direction: str = 'sell', params: dict = {},
                             raise_error: bool = True):
 
