@@ -162,14 +162,14 @@ class CBot:
             )
             delay += 0.5
 
-        for key, val in self.exchange.prev_call_options.items():
-            _, odate, _, _  = val['instrument_name'].split('-')
-            tasks.append(
-                asyncio.create_task(
-                    self.exchange.fetch_orderbook_data(key, delay=delay, odate=odate)
-                )
-            )
-            delay += 0.5
+        # for key, val in self.exchange.prev_call_options.items():
+        #     _, odate, _, _  = val['instrument_name'].split('-')
+        #     tasks.append(
+        #         asyncio.create_task(
+        #             self.exchange.fetch_orderbook_data(key, delay=delay, odate=odate)
+        #         )
+        #     )
+        #     delay += 0.5
 
         # for key, val in self.exchange.put_options.items():
         #     tasks.append(
