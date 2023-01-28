@@ -94,8 +94,8 @@ class Deribit_Exchange:
         # self.prev_call_options = {}
         # self.prev_put_options = {}
         self.trigger_orders = {}
-        self.best_put_instr = None
-        self.best_call_instr = None
+        # self.best_put_instr = None
+        # self.best_call_instr = None
         
     def create_message(self, method: str, params: dict = {},
                         mess_id: Union[int, str, None] = None,
@@ -194,7 +194,7 @@ class Deribit_Exchange:
 
         return self.get_response_result(await ws.recv())
 
-    async def get_index_price(self, ws, delay = 0) -> Optional[dict]:
+    async def get_index_price(self, ws, delay = 0):
         
         self.logger.info('get_index_price')
 
@@ -214,6 +214,8 @@ class Deribit_Exchange:
             # self.init_price = price['index_price']
             self.asset_price = price['index_price']
             self.updated = True
+
+        return self.asset_price 
 
     async def create_order(self, ws, direction: str = 'sell', params: dict = {},
                             raise_error: bool = True):
@@ -781,20 +783,20 @@ class Deribit_Exchange:
                 #         instrument = self.prev_call_options[float(strike)]
                 
                 self.orders[order['instrument_name']] = instrument
-                if order_type == 'P':
-                    if self.best_put_instr is not None:
-                        self.logger.info(f"Best Put Stike: {self.best_put_instr['strike']} bid: {self.best_put_instr['bid']}   Order Strike: {instrument['strike']} bid: {instrument['bid']}")
-                        if instrument['bid'] > self.best_put_instr['bid']:
-                            self.best_put_instr = instrument
-                    else:
-                        self.best_put_instr = instrument
-                else:
-                    if self.best_call_instr is not None:
-                        self.logger.info(f"Best Call Stike: {self.best_call_instr['strike']} bid: {self.best_call_instr['bid']}   Order Strike: {instrument['strike']} bid: {instrument['bid']}")
-                        if instrument['bid'] > self.best_call_instr['bid']:
-                            self.best_call_instr = instrument
-                    else:
-                        self.best_call_instr = instrument
+                # if order_type == 'P':
+                #     if self.best_put_instr is not None:
+                #         self.logger.info(f"Best Put Stike: {self.best_put_instr['strike']} bid: {self.best_put_instr['bid']}   Order Strike: {instrument['strike']} bid: {instrument['bid']}")
+                #         if instrument['bid'] > self.best_put_instr['bid']:
+                #             self.best_put_instr = instrument
+                #     else:
+                #         self.best_put_instr = instrument
+                # else:
+                #     if self.best_call_instr is not None:
+                #         self.logger.info(f"Best Call Stike: {self.best_call_instr['strike']} bid: {self.best_call_instr['bid']}   Order Strike: {instrument['strike']} bid: {instrument['bid']}")
+                #         if instrument['bid'] > self.best_call_instr['bid']:
+                #             self.best_call_instr = instrument
+                #     else:
+                #         self.best_call_instr = instrument
 
                 if float(strike) in self.trigger_orders:
                     self.logger.info(f'Strike {strike} found in triger_orders!')
