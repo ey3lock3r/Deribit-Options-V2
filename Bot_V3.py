@@ -135,7 +135,7 @@ class CBot:
     
         # self.exchange.call_options, self.exchange.put_options = await self.exchange.prepare_option_struct()
         await self.exchange.prepare_option_struct()
-        await self.exchange.prepare_prev_option_struct()
+        # await self.exchange.prepare_prev_option_struct()
         # await self.exchange.fetch_account_info()
 
         # tasks.append(asyncio.to_thread(self.check_riskfree_trade))

@@ -91,8 +91,8 @@ class Deribit_Exchange:
         self.traded_prems = {}
         self.max_traded_prem = 0.0
         self.odate = None
-        self.prev_call_options = {}
-        self.prev_put_options = {}
+        # self.prev_call_options = {}
+        # self.prev_put_options = {}
         self.trigger_orders = {}
         self.best_put_instr = None
         self.best_call_instr = None
@@ -768,17 +768,17 @@ class Deribit_Exchange:
             
             self.logger.info(f"{order['instrument_name']} : {order['realized_profit_loss']}")
             if float(order['realized_profit_loss']) == 0:
-                if odate == self.odate:
-                    if order_type == 'P':
-                        instrument = self.put_options[float(strike)]
-                    else:
-                        instrument = self.call_options[float(strike)]
-
+                # if odate == self.odate:
+                if order_type == 'P':
+                    instrument = self.put_options[float(strike)]
                 else:
-                    if order_type == 'P':
-                        instrument = self.prev_put_options[float(strike)]
-                    else:
-                        instrument = self.prev_call_options[float(strike)]
+                    instrument = self.call_options[float(strike)]
+
+                # else:
+                #     if order_type == 'P':
+                #         instrument = self.prev_put_options[float(strike)]
+                #     else:
+                #         instrument = self.prev_call_options[float(strike)]
                 
                 self.orders[order['instrument_name']] = instrument
                 if order_type == 'P':
@@ -983,16 +983,16 @@ class Deribit_Exchange:
         call_inst_name = ''
         put_options = {}
         call_options = {}
-        if odate == '':
-            put_inst_name = self.put_options[float(strike)]['instrument_name']
-            call_inst_name = self.call_options[float(strike)]['instrument_name']
-            put_options = self.put_options
-            call_options = self.call_options
-        else:
-            put_inst_name = self.prev_put_options[float(strike)]['instrument_name']
-            call_inst_name = self.prev_call_options[float(strike)]['instrument_name']
-            put_options = self.prev_put_options
-            call_options = self.prev_call_options
+        # if odate == '':
+        put_inst_name = self.put_options[float(strike)]['instrument_name']
+        call_inst_name = self.call_options[float(strike)]['instrument_name']
+        put_options = self.put_options
+        call_options = self.call_options
+        # else:
+        #     put_inst_name = self.prev_put_options[float(strike)]['instrument_name']
+        #     call_inst_name = self.prev_call_options[float(strike)]['instrument_name']
+        #     put_options = self.prev_put_options
+        #     call_options = self.prev_call_options
 
         max_err_cnt = 2
         err_cnt = 0
@@ -1068,29 +1068,29 @@ class Deribit_Exchange:
 
         self.logger.info(f'fetch_orderbook_data: Listener for {strike} ended..')
 
-    async def prepare_prev_option_struct(self) -> NoReturn:
+    # async def prepare_prev_option_struct(self) -> NoReturn:
 
-        if not self.trading: return
+    #     if not self.trading: return
 
-        self.logger.info(f'prepare_cont_option_struct')
+    #     self.logger.info(f'prepare_cont_option_struct')
 
-        async with websockets.connect(self.url) as websocket:
+    #     async with websockets.connect(self.url) as websocket:
 
-            await self.auth(websocket)
+    #         await self.auth(websocket)
 
-            orders = await self.get_positions(websocket, currency=self.currency)
+    #         orders = await self.get_positions(websocket, currency=self.currency)
 
-            for order in orders:
-                _, odate, strike, order_type  = order['instrument_name'].split('-')
+    #         for order in orders:
+    #             _, odate, strike, order_type  = order['instrument_name'].split('-')
 
-                if odate != self.odate:
-                    if float(order['realized_profit_loss']) == 0:
-                        instrument = await self.get_instrument(websocket, order['instrument_name'])
+    #             if odate != self.odate:
+    #                 if float(order['realized_profit_loss']) == 0:
+    #                     instrument = await self.get_instrument(websocket, order['instrument_name'])
 
-                        if order_type == 'P':
-                            self.prev_put_options[float(strike)] = instrument
-                        else:
-                            self.prev_call_options[float(strike)] = instrument
+    #                     if order_type == 'P':
+    #                         self.prev_put_options[float(strike)] = instrument
+    #                     else:
+    #                         self.prev_call_options[float(strike)] = instrument
 
 
 
