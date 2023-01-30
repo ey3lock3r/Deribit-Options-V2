@@ -532,9 +532,6 @@ class Deribit_Exchange:
             max_prem_cnt = self.max_prem_cnt
 
             premium = order_list[0]['sum_premium'][bid_ask]
-            prem_disp = premium
-            premium = str(premium)
-
             self.logger.info(f'Premium is {premium}')
 
             if np.isnan(premium):
@@ -562,6 +559,8 @@ class Deribit_Exchange:
                             return
 
             # websocket = await websockets.connect(self.url)
+
+            premium = str(premium)
             async with websockets.connect(self.url) as websocket:
 
                 await self.auth(websocket)
@@ -603,7 +602,7 @@ class Deribit_Exchange:
                             'price'           : price,
                             'amount'          : ord_size,
                             'max_show'        : 0,
-                            'label'           :  f'{prem_disp},{strk_dist}' #premium, strike distance, 
+                            'label'           :  f'{premium},{strk_dist}' #premium, strike distance, 
                         }
                         order_res = await self.create_order(websocket, 'sell', params)
                         if 'order' in order_res:
@@ -642,7 +641,7 @@ class Deribit_Exchange:
                                     'trigger_price'   : order['strike'],
                                     'post_only'       : True,
                                     'max_show'        : 0,
-                                    'label'           :  f'{prem_disp},{strk_dist}' #premium, strike distance, 
+                                    'label'           :  f'{premium},{strk_dist}' #premium, strike distance, 
                                 }
                                 order_res = await self.create_order(websocket, direction, params)
                                 
