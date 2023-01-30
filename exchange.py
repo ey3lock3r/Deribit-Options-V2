@@ -601,7 +601,6 @@ class Deribit_Exchange:
                             'type'            : 'limit',
                             'price'           : price,
                             'amount'          : ord_size,
-                            'max_show'        : 0,
                             'label'           :  f'{premium},{strk_dist}' #premium, strike distance, 
                         }
                         order_res = await self.create_order(websocket, 'sell', params)
