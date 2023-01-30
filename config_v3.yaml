@@ -16,7 +16,7 @@ exchange:
   dvol_min: 50
   dvol_mid: 60
   expire_time: 6
-  max_prem_cnt: 3
+  max_prem_cnt: 2
   maker: false
 
   auth:
