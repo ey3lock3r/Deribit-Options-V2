@@ -19,7 +19,7 @@ class Deribit_Exchange:
 
     def __init__(self, url, auth: dict, currency: str = 'ETH', env: str = 'test', trading: bool = False, order_size: float = 0.1,
                 daydelta: int = 2, risk_perc: float = 0.003, min_prem: float = 0.008, strike_dist: int = 1500, expire_time: int = 7,
-                dvol_thres: float = 65.0, default_prems = None, max_prem_cnt = 2,
+                dvol_min: float = 50.0, dvol_mid: float = 60.0, default_prems = None, max_prem_cnt = 2, maker: bool = False,
                 logger: Union[logging.Logger, str, None] = None):
 
         self.currency = currency
@@ -29,9 +29,11 @@ class Deribit_Exchange:
         self.min_prem = min_prem
         self.strike_dist = strike_dist
         self.expire_time = expire_time
-        self.dvol_thres = dvol_thres
+        self.dvol_min = dvol_min
+        self.dvol_mid = dvol_mid
         self.default_prems = default_prems
         self.max_prem_cnt = max_prem_cnt
+        self.maker = maker
 
         self.url = url[env]
         self.__credentials = auth[env]
@@ -457,10 +459,6 @@ class Deribit_Exchange:
             premium = 0.0
             # call_strike = 0.0
             price = 0.0
-
-            if np.isnan(order_list[0]['sum_premium']):
-                self.logger.info(f'Premium is {premium}')
-                return
             
             # for order in order_list.copy():
             #     # if order[bid_ask] == 0.0005:
@@ -520,44 +518,48 @@ class Deribit_Exchange:
             # self.logger.info(f'Best put strike: {self.best_put_instr["strike"]}')
             # _, odate, strike, _  = order_list[0]['instrument']['instrument_name'].split('-')
             # order_list = new_order_list
-            premium = order_list[0]['sum_premium']
-            prem_disp = premium
 
             # if premium < self.min_prem and len(self.traded_prems) == 0:
             #     premium = 0
-            if np.isnan(premium):
-                self.logger.info(f'Premium is {premium}')
-                return
+
+            # allow all trades when low volatility and time between 0-exp time
+
+            if self.maker:
+                bid_ask = 'ask' 
+            else:
+                bid_ask = 'bid' 
+
+            max_prem_cnt = self.max_prem_cnt
+
+            premium = order_list[0]['sum_premium'][bid_ask]
+            prem_disp = premium
+            premium = str(premium)
 
             self.logger.info(f'Premium is {premium}')
 
-            # allow all trades when low volatility and time between 0-exp time
-            max_prem_cnt = 0
+            if np.isnan(premium):
+                return
+
             if datetime.now(timezone.utc).hour >= 8:
-                if self.dvol < self.dvol_thres: # and \
-                    # datetime.now(timezone.utc).hour < self.expire_time:
-                    # bid_ask = 'ask'
-                    max_prem_cnt = 2
+
+                if self.dvol < self.dvol_min:
+                    max_prem_cnt = self.max_prem_cnt * 2
 
                 else:
-                    max_prem_cnt = self.max_prem_cnt
+                    if self.dvol >= self.dvol_mid:
+                        if premium < self.min_prem or \
+                            strk_dist <= self.strike_dist:
+                            self.logger.info(f'Premium {premium} < {self.min_prem} or Strike Dist {strk_dist} <= {self.strike_dist}')
+                            return
 
-                    if premium < self.min_prem or \
-                        strk_dist <= self.strike_dist:
-                        self.logger.info(f'Premium {premium} < {self.min_prem} or Strike Dist {strk_dist} <= {self.strike_dist}')
-                        return
+                        # if premium <= self.max_traded_prem:
+                        #     self.logger.info(f'{premium} premium <= {self.max_traded_prem} max traded prem')
+                        #     return
 
-                    # if premium <= self.max_traded_prem:
-                    #     self.logger.info(f'{premium} premium <= {self.max_traded_prem} max traded prem')
-                    #     return
-
-
-            if str(premium) in self.traded_prems:
-                if self.traded_prems[str(premium)] >= max_prem_cnt:
-                    self.logger.info(f'Max count of {self.traded_prems[str(premium)]} for premium {premium} already traded!')
-                    return
-
-            premium = str(premium)
+                    if str(premium) in self.traded_prems:
+                        if self.traded_prems[str(premium)] >= max_prem_cnt:
+                            self.logger.info(f'Max count of {self.traded_prems[str(premium)]} for premium {premium} already traded!')
+                            return
 
             # websocket = await websockets.connect(self.url)
             async with websockets.connect(self.url) as websocket:
@@ -586,11 +588,12 @@ class Deribit_Exchange:
                     try:
                         err_loc = order['instrument']['instrument_name']
 
-                        if datetime.now(timezone.utc).hour >= 8 and order[bid_ask] == 0.0005:
-                            price = 0.001
-                        else:
-                            price = order[bid_ask]
+                        # if datetime.now(timezone.utc).hour >= 8 and order[bid_ask] == 0.0005:
+                        #     price = 0.001
+                        # else:
+                        #     price = order[bid_ask]
 
+                        price = order[bid_ask]
                         ord_size = self.order_size * max_prem_cnt
 
                         self.logger.info(f'Selling {ord_size} amount of {order["instrument"]["instrument_name"]} at {price} premium')
@@ -658,9 +661,9 @@ class Deribit_Exchange:
             # else:
             # self.traded_prems.add(premium)
             if premium in self.traded_prems:
-                self.traded_prems[premium] += 1
+                self.traded_prems[premium] += max_prem_cnt
             else:
-                self.traded_prems[premium] = 1
+                self.traded_prems[premium] = max_prem_cnt
 
             self.max_traded_prem = float(premium)
     
