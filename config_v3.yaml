@@ -17,7 +17,7 @@ exchange:
   dvol_mid: 60
   expire_time: 6
   max_prem_cnt: 2
-  maker: true
+  maker: false
 
   auth:
     test:

@@ -557,6 +557,9 @@ class Deribit_Exchange:
                         if self.traded_prems[str(premium)] >= max_prem_cnt:
                             self.logger.info(f'Max count of {self.traded_prems[str(premium)]} for premium {premium} already traded!')
                             return
+            
+            else:
+                bid_ask = 'bid'
 
             # websocket = await websockets.connect(self.url)
 
