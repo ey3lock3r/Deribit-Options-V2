@@ -827,9 +827,9 @@ class Deribit_Exchange:
 
                 if order_type == 'P':
                     if lbl_prem not in self.traded_prems:
-                        self.traded_prems[lbl_prem] = 1
+                        self.traded_prems[lbl_prem] = self.max_prem_cnt
                     else:
-                        self.traded_prems[lbl_prem] += 1
+                        self.traded_prems[lbl_prem] += self.max_prem_cnt
 
         self.pos_updated = True
         self.logger.info(f'There are {len(self.orders)} open positions!')
