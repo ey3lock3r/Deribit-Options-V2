@@ -552,10 +552,10 @@ class Deribit_Exchange:
                     #     return
 
 
-                if str(premium) in self.traded_prems:
-                    if self.traded_prems[str(premium)] >= max_prem_cnt:
-                        self.logger.info(f'Max count of {self.traded_prems[str(premium)]} for premium {premium} already traded!')
-                        return
+            if str(premium) in self.traded_prems:
+                if self.traded_prems[str(premium)] >= max_prem_cnt:
+                    self.logger.info(f'Max count of {self.traded_prems[str(premium)]} for premium {premium} already traded!')
+                    return
 
             premium = str(premium)
 
@@ -591,12 +591,14 @@ class Deribit_Exchange:
                         else:
                             price = order[bid_ask]
 
-                        self.logger.info(f'Selling {self.order_size} amount of {order["instrument"]["instrument_name"]} at {price} premium')
+                        ord_size = self.order_size * max_prem_cnt
+
+                        self.logger.info(f'Selling {ord_size} amount of {order["instrument"]["instrument_name"]} at {price} premium')
                         params = {
                             'instrument_name' : order['instrument']['instrument_name'],
                             'type'            : 'limit',
                             'price'           : price,
-                            'amount'          : self.order_size,
+                            'amount'          : ord_size,
                             'label'           :  f'{prem_disp},{strk_dist}' #premium, strike distance, 
                         }
                         order_res = await self.create_order(websocket, 'sell', params)
@@ -609,7 +611,7 @@ class Deribit_Exchange:
                             
                             if order['strike'] in self.trigger_orders:
                                 err_loc = f'Modify BTC-PERPETUAL {order["option_type"]}'
-                                osize = self.trigger_orders[order['strike']]['order_size'] + self.order_size
+                                osize = self.trigger_orders[order['strike']]['order_size'] + ord_size
                                 self.trigger_orders[order['strike']]['order_size'] = osize
                                 self.logger.info(f'Total order size: {osize}')
                                 amount = self.calc_amount(order['trigger_price'], osize)
@@ -625,7 +627,7 @@ class Deribit_Exchange:
                                 err_loc = f'New BTC-PERPETUAL {order["option_type"]}'
                                 direction = order['direction']
                                 price = order['trigger_price']
-                                amount = self.calc_amount(order['trigger_price'], self.order_size)
+                                amount = self.calc_amount(order['trigger_price'], ord_size)
                                 self.logger.info(f'{direction}ing {amount} amount of BTC-PERPETUAL at {price} price and trigger price at {order["strike"]}')
                                 params = {
                                     'instrument_name' : 'BTC-PERPETUAL',
@@ -640,7 +642,7 @@ class Deribit_Exchange:
                                 order_res = await self.create_order(websocket, direction, params)
                                 
                                 trig_ord = {
-                                    'order_size'  : self.order_size,
+                                    'order_size'  : ord_size,
                                     'order_id': order_res['order']['order_id']
                                 }
                                 self.trigger_orders[order['strike']] = trig_ord
