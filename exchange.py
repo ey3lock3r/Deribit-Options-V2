@@ -18,7 +18,7 @@ class Deribit_Exchange:
     The business logic of the bot itself is described in the worker method."""
 
     def __init__(self, url, auth: dict, currency: str = 'ETH', env: str = 'test', trading: bool = False, order_size: float = 0.1,
-                daydelta: int = 2, risk_perc: float = 0.003, min_prem: float = 0.008, strike_dist: int = 1500, expire_time: int = 7,
+                daydelta: int = 2, risk_perc: float = 0.003, min_prem: float = 0.001, mid_prem: float = 0.008, strike_dist: int = 1500, expire_time: int = 7,
                 dvol_min: float = 50.0, dvol_mid: float = 60.0, default_prems = None, max_prem_cnt = 2, maker: bool = False,
                 logger: Union[logging.Logger, str, None] = None):
 
@@ -26,6 +26,7 @@ class Deribit_Exchange:
         self.order_size = order_size
         self.daydelta = daydelta
         self.risk_perc = risk_perc 
+        self.mid_prem = mid_prem
         self.min_prem = min_prem
         self.strike_dist = strike_dist
         self.expire_time = expire_time
@@ -51,7 +52,7 @@ class Deribit_Exchange:
 
         self.init_vals()
         self.logger.info(f'Bot init for {self.currency} options, tradin = {trading}')
-        self.logger.info(f'min_prem={min_prem} strike_dist={strike_dist}')
+        self.logger.info(f'mid_prem={mid_prem} strike_dist={strike_dist}')
 
     @property
     def keep_alive(self) -> bool :
@@ -404,7 +405,7 @@ class Deribit_Exchange:
         # diff                   = 0.002
         # % risk 0.003
 
-        loss = 0.015 - self.min_prem
+        loss = 0.015 - self.mid_prem
         
 
         # to_risk = self.avail_funds * self.risk_perc
@@ -519,7 +520,7 @@ class Deribit_Exchange:
             # _, odate, strike, _  = order_list[0]['instrument']['instrument_name'].split('-')
             # order_list = new_order_list
 
-            # if premium < self.min_prem and len(self.traded_prems) == 0:
+            # if premium < self.mid_prem and len(self.traded_prems) == 0:
             #     premium = 0
 
             # allow all trades when low volatility and time between 0-exp time
@@ -544,17 +545,21 @@ class Deribit_Exchange:
 
                 else:
                     if self.dvol >= self.dvol_mid:
-                        if premium < self.min_prem or \
+                        if premium < self.mid_prem or \
                             strk_dist <= self.strike_dist:
-                            self.logger.info(f'Premium {premium} < {self.min_prem} or Strike Dist {strk_dist} <= {self.strike_dist}')
+                            self.logger.info(f'Premium {premium} < {self.mid_prem} or Strike Dist {strk_dist} <= {self.strike_dist}')
                             return
 
                         # if premium <= self.max_traded_prem:
                         #     self.logger.info(f'{premium} premium <= {self.max_traded_prem} max traded prem')
                         #     return
                     
-                    # else:
-                    #     max_prem_cnt = self.max_prem_cnt * 2
+                    else:
+                        # max_prem_cnt = self.max_prem_cnt * 2
+                        if premium < self.min_prem:
+                            self.logger.info(f'Premium {premium} < {self.min_prem}')
+                            return
+                    
 
                     if str(premium) in self.traded_prems:
                         if self.traded_prems[str(premium)] >= max_prem_cnt:

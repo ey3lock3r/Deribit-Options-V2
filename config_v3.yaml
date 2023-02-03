@@ -11,7 +11,8 @@ exchange:
   daydelta: 1
   order_size: 0.1
   risk_perc: 0.003
-  min_prem: 0.005 # 0.006
+  min_prem: 0.002
+  mid_prem: 0.005 # 0.006
   strike_dist: 750 # 1500
   dvol_min: 50
   dvol_mid: 60
