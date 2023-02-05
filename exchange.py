@@ -753,7 +753,7 @@ class Deribit_Exchange:
         self.logger.info(f'fetch_trigger_orders')
 
         await asyncio.sleep(delay)
-        orders = await self.get_positions(ws, currency=self.currency)
+        # orders = await self.get_positions(ws, currency=self.currency) # << to be deleted?
 
         trig_orders = await self.get_open_orders_by_instrument(ws, 'BTC-PERPETUAL', 'stop_limit')
 
