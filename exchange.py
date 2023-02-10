@@ -641,7 +641,7 @@ class Deribit_Exchange:
                                 self.logger.info(f'{direction}ing {amount} amount of BTC-PERPETUAL at {price} price and trigger price at {order["strike"]}')
                                 params = {
                                     'instrument_name' : 'BTC-PERPETUAL',
-                                    'type'            : 'take_limit',
+                                    'type'            : 'stop_market',
                                     'price'           : price,
                                     'amount'          : amount,
                                     'trigger'         : 'mark_price',
