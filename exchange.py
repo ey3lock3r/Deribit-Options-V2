@@ -642,7 +642,6 @@ class Deribit_Exchange:
                                 params = {
                                     'instrument_name' : 'BTC-PERPETUAL',
                                     'type'            : 'stop_market',
-                                    'price'           : price,
                                     'amount'          : amount,
                                     'trigger'         : 'mark_price',
                                     'trigger_price'   : order['strike'],
