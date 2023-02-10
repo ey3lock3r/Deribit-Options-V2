@@ -14,7 +14,7 @@ exchange:
   min_prem: 0.003 # 0.003
   mid_prem: 0.005 # 0.006
   strike_dist: 1000 # 1500
-  dvol_min: 47
+  dvol_min: 45
   dvol_mid: 60
   expire_time: 6
   max_prem_cnt: 2
