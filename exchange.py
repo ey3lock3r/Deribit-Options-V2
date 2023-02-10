@@ -646,7 +646,6 @@ class Deribit_Exchange:
                                     'amount'          : amount,
                                     'trigger'         : 'mark_price',
                                     'trigger_price'   : order['strike'],
-                                    'post_only'       : True,
                                     'max_show'        : 0,
                                     'label'           :  f'{premium},{strk_dist}' #premium, strike distance, 
                                 }
