@@ -538,7 +538,7 @@ class Deribit_Exchange:
             if np.isnan(premium):
                 return
 
-            if datetime.now(timezone.utc).hour >= 8:
+            if datetime.now(timezone.utc).hour >= self.expire_time:
 
                 if self.dvol < self.dvol_min:
                     max_prem_cnt = self.max_prem_cnt * 2
