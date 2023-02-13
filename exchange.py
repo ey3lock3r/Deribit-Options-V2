@@ -559,13 +559,13 @@ class Deribit_Exchange:
                             self.logger.info(f'Premium {premium} < {self.min_prem}')
                             return
 
-                    if str(premium) in self.traded_prems:
-                        if self.traded_prems[str(premium)] >= max_prem_cnt:
-                            self.logger.info(f'Max count of {self.traded_prems[str(premium)]} for premium {premium} already traded!')
-                            return
-
                 if strk_dist <= self.strike_dist:
                     self.logger.info(f'Strike Dist {strk_dist} <= {self.strike_dist}')
+                    return
+
+            if str(premium) in self.traded_prems:
+                if self.traded_prems[str(premium)] >= max_prem_cnt:
+                    self.logger.info(f'Max count of {self.traded_prems[str(premium)]} for premium {premium} already traded!')
                     return
 
             # websocket = await websockets.connect(self.url)
