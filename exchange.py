@@ -19,7 +19,7 @@ class Deribit_Exchange:
 
     def __init__(self, url, auth: dict, currency: str = 'ETH', env: str = 'test', trading: bool = False, order_size: float = 0.1,
                 daydelta: int = 2, risk_perc: float = 0.003, min_prem: float = 0.001, mid_prem: float = 0.008, strike_dist: int = 1500, expire_time: int = 7,
-                dvol_min: float = 50.0, dvol_mid: float = 60.0, default_prems = None, max_prem_cnt = 2, maker: bool = False, ord_type: str = ''
+                dvol_min: float = 50.0, dvol_mid: float = 60.0, default_prems = None, max_prem_cnt = 2, maker: bool = False, ord_type: str = '',
                 logger: Union[logging.Logger, str, None] = None):
 
         self.currency = currency
