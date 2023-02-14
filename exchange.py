@@ -764,7 +764,7 @@ class Deribit_Exchange:
                 'order_id': order['order_id'],
                 'order_size'  : 0
             }
-            self.trigger_orders[float(order['price'])] = params
+            self.trigger_orders[float(order['trigger_price'])] = params
 
     async def fetch_account_positions(self, ws, delay = 0):
 
