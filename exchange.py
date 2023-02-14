@@ -19,7 +19,7 @@ class Deribit_Exchange:
 
     def __init__(self, url, auth: dict, currency: str = 'ETH', env: str = 'test', trading: bool = False, order_size: float = 0.1,
                 daydelta: int = 2, risk_perc: float = 0.003, min_prem: float = 0.001, mid_prem: float = 0.008, strike_dist: int = 1500, expire_time: int = 7,
-                dvol_min: float = 50.0, dvol_mid: float = 60.0, default_prems = None, max_prem_cnt = 2, maker: bool = False,
+                dvol_min: float = 50.0, dvol_mid: float = 60.0, default_prems = None, max_prem_cnt = 2, maker: bool = False, ord_type: str = ''
                 logger: Union[logging.Logger, str, None] = None):
 
         self.currency = currency
@@ -35,6 +35,7 @@ class Deribit_Exchange:
         self.default_prems = default_prems
         self.max_prem_cnt = max_prem_cnt
         self.maker = maker
+        self.ord_type = ord_type
 
         self.url = url[env]
         self.__credentials = auth[env]
@@ -644,7 +645,7 @@ class Deribit_Exchange:
                                 self.logger.info(f'{direction}ing {amount} amount of BTC-PERPETUAL at {price} price and trigger price at {order["strike"]}')
                                 params = {
                                     'instrument_name' : 'BTC-PERPETUAL',
-                                    'type'            : 'stop_market',
+                                    'type'            : self.ord_type,
                                     'amount'          : amount,
                                     'trigger'         : 'mark_price',
                                     'trigger_price'   : order['strike'],
@@ -756,7 +757,7 @@ class Deribit_Exchange:
         await asyncio.sleep(delay)
         # orders = await self.get_positions(ws, currency=self.currency) # << to be deleted?
 
-        trig_orders = await self.get_open_orders_by_instrument(ws, 'BTC-PERPETUAL', 'stop_limit')
+        trig_orders = await self.get_open_orders_by_instrument(ws, 'BTC-PERPETUAL', self.ord_type)
 
         for order in trig_orders:
             params = {
