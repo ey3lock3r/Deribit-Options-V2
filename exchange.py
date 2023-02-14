@@ -533,7 +533,7 @@ class Deribit_Exchange:
             max_prem_cnt = self.max_prem_cnt
 
             premium = order_list[0]['sum_premium'][bid_ask]
-            strk_dist = order_list[0][strk_dist]
+            strk_dist = order_list[0]['strk_dist']
             self.logger.info(f'Premium is {premium}')
 
             if np.isnan(premium):
