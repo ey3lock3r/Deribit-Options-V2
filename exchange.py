@@ -616,52 +616,52 @@ class Deribit_Exchange:
                             'label'           :  f'{premium},{strk_dist}' #premium, strike distance, 
                         }
                         order_res = await self.create_order(websocket, 'sell', params)
-                        if 'order' in order_res:
-                            order_det = order_res['order']
-                            self.orders[order_det['instrument_name']] = order['instrument']
-                            # order_list.pop(idx)
-                            # premiums += float(order['bid'])
-                            await asyncio.sleep(0.5)
+                        # if 'order' in order_res:
+                        #     order_det = order_res['order']
+                        #     self.orders[order_det['instrument_name']] = order['instrument']
+                        #     # order_list.pop(idx)
+                        #     # premiums += float(order['bid'])
+                        #     await asyncio.sleep(0.5)
                             
-                            if order['strike'] in self.trigger_orders:
-                                err_loc = f'Modify BTC-PERPETUAL {order["option_type"]}'
-                                osize = self.trigger_orders[order['strike']]['order_size'] + ord_size
-                                self.trigger_orders[order['strike']]['order_size'] = osize
-                                self.logger.info(f'Total order size: {osize}')
-                                amount = self.calc_amount(order['trigger_price'], osize)
-                                self.logger.info(f'Modifying order with amount {amount}')
+                        #     if order['strike'] in self.trigger_orders:
+                        #         err_loc = f'Modify BTC-PERPETUAL {order["option_type"]}'
+                        #         osize = self.trigger_orders[order['strike']]['order_size'] + ord_size
+                        #         self.trigger_orders[order['strike']]['order_size'] = osize
+                        #         self.logger.info(f'Total order size: {osize}')
+                        #         amount = self.calc_amount(order['trigger_price'], osize)
+                        #         self.logger.info(f'Modifying order with amount {amount}')
 
-                                params = {
-                                    'order_id': self.trigger_orders[order['strike']]['order_id'],
-                                    'amount'  : amount
-                                }
-                                await self.edit_order(websocket, params)
+                        #         params = {
+                        #             'order_id': self.trigger_orders[order['strike']]['order_id'],
+                        #             'amount'  : amount
+                        #         }
+                        #         await self.edit_order(websocket, params)
                             
-                            else:
-                                err_loc = f'New BTC-PERPETUAL {order["option_type"]}'
-                                direction = order['direction']
-                                price = order['trigger_price']
-                                amount = self.calc_amount(order['trigger_price'], ord_size)
-                                self.logger.info(f'{direction}ing {amount} amount of BTC-PERPETUAL at {price} price and trigger price at {order["strike"]}')
-                                params = {
-                                    'instrument_name' : 'BTC-PERPETUAL',
-                                    'type'            : self.ord_type,
-                                    'amount'          : amount,
-                                    'trigger'         : 'mark_price',
-                                    'trigger_price'   : order['strike'],
-                                    'max_show'        : 0,
-                                    'label'           :  f'{premium},{strk_dist}' #premium, strike distance, 
-                                }
-                                order_res = await self.create_order(websocket, direction, params)
+                        #     else:
+                        #         err_loc = f'New BTC-PERPETUAL {order["option_type"]}'
+                        #         direction = order['direction']
+                        #         price = order['trigger_price']
+                        #         amount = self.calc_amount(order['trigger_price'], ord_size)
+                        #         self.logger.info(f'{direction}ing {amount} amount of BTC-PERPETUAL at {price} price and trigger price at {order["strike"]}')
+                        #         params = {
+                        #             'instrument_name' : 'BTC-PERPETUAL',
+                        #             'type'            : self.ord_type,
+                        #             'amount'          : amount,
+                        #             'trigger'         : 'mark_price',
+                        #             'trigger_price'   : order['strike'],
+                        #             'max_show'        : 0,
+                        #             'label'           :  f'{premium},{strk_dist}' #premium, strike distance, 
+                        #         }
+                        #         order_res = await self.create_order(websocket, direction, params)
                                 
-                                trig_ord = {
-                                    'order_size'  : ord_size,
-                                    'order_id': order_res['order']['order_id']
-                                }
-                                self.trigger_orders[order['strike']] = trig_ord
+                        #         trig_ord = {
+                        #             'order_size'  : ord_size,
+                        #             'order_id': order_res['order']['order_id']
+                        #         }
+                        #         self.trigger_orders[order['strike']] = trig_ord
                                 
-                        else:
-                            self.logger.info('Error in post_orders: Order not in order_res!')
+                        # else:
+                        #     self.logger.info('Error in post_orders: Order not in order_res!')
 
                         await asyncio.sleep(0.5)
 
