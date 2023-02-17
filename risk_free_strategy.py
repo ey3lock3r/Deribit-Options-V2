@@ -130,12 +130,12 @@ def sell_008_premium_2k_dist(put_options, call_options, price, min_prem, strike_
     # create put/call dataframes and check if empty
     df_put_bk = pd.DataFrame(put_options.values())
     df_put_bk.set_index('strike', inplace=True, drop=False)
-    df_put = df_put_bk[df_put_bk['delta'] > -0.2]
+    df_put = df_put_bk[df_put_bk['delta'] >= -0.2]
     # df_put = df_put_bk[(df_put_bk['delta'] <= -0.1) & (df_put_bk['delta'] >= -0.2)]
 
     df_call_bk = pd.DataFrame(call_options.values())
     df_call_bk.set_index('strike', inplace=True, drop=False)
-    df_call = df_call_bk[df_call_bk['delta'] < 0.2]
+    df_call = df_call_bk[df_call_bk['delta'] <= 0.2]
     # df_call = df_call_bk[(df_call_bk['delta'] >= 0.1) & (df_call_bk['delta'] <= 0.2)]
 
     if not df_put.empty and not df_call.empty:
